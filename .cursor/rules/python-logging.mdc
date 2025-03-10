@@ -1,0 +1,124 @@
+---
+description: Standards for Python logging implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Logging Standards
+
+<rule>
+name: python_logging
+description: Standards for implementing logging in Python applications
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Logging Best Practices
+
+      ### Logging Setup
+      1. Configure logging at application startup:
+         ```python
+         import logging
+         import logging.config
+         import json
+
+         def setup_logging(
+             default_path='logging.json',
+             default_level=logging.INFO,
+             env_key='LOG_CFG'
+         ):
+             """Setup logging configuration"""
+             logging.basicConfig(level=default_level)
+             logger = logging.getLogger(__name__)
+         ```
+
+      ### Logging Levels
+      Use appropriate logging levels:
+      - `DEBUG`: Detailed information for debugging
+      - `INFO`: General operational events
+      - `WARNING`: Unexpected but handled events
+      - `ERROR`: Errors that prevent normal operation
+      - `CRITICAL`: System is unusable
+
+      ### Log Message Format
+      1. Include essential context:
+         ```python
+         logging.basicConfig(
+             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+             level=logging.INFO
+         )
+         ```
+      2. Use structured logging for machine parsing:
+         ```python
+         logger.info('Processing data', extra={
+             'user_id': user.id,
+             'action': 'process',
+             'status': 'started'
+         })
+         ```
+
+      ### Contextual Logging
+      1. Use context managers for temporary logging changes:
+         ```python
+         with log_context(user_id=user.id, request_id=request.id):
+             logger.info('Processing request')
+         ```
+      2. Include relevant context in all logs
+
+      ### Error Logging
+      1. Integrate properly with exception handling (see @python-error-handling)
+      2. Use appropriate log levels for different error severities
+      3. Include stack traces for unexpected errors
+      4. Use contextual information to enhance error logs
+
+      ### Log Handlers
+      1. Configure appropriate handlers:
+         - Console handler for development
+         - File handler for production
+         - Syslog for system integration
+         - Network handlers for centralized logging
+
+      ### Security Considerations
+      1. Never log sensitive information:
+         - Passwords
+         - API keys
+         - Personal identifiable information
+      2. Implement log rotation
+      3. Set appropriate file permissions
+      4. Follow security guidelines from @python-security
+
+      ### Related Guidelines
+      - For error handling integration, see @python-error-handling
+      - For configuration of logging, see @python-configuration
+      - For security considerations, see @python-security
+      - For debugging integration, see @python-debugging
+
+examples:
+  - input: |
+      # Bad: Inconsistent logging
+      print("Error occurred")
+      print(f"Processing {data}")
+
+      # Bad: Logging sensitive data
+      logger.info(f"User password: {password}")
+
+      # Good: Structured logging
+      logger = logging.getLogger(__name__)
+      logger.info("Processing request", extra={
+          'request_id': req_id,
+          'user_id': user_id,
+          'status': 'started'
+      })
+
+      # Good: Context manager
+      with log_context(request_id=req_id):
+          logger.info("Request processed successfully")
+    output: "Logging follows security and best practices"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "logging", "security", "best-practices"]
+</rule> 

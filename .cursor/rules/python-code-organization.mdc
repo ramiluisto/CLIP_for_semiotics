@@ -1,0 +1,115 @@
+---
+description: Standards for Python code organization implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+---
+description: Standards for Python project structure and organization
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Code Organization Standards
+
+<rule>
+name: python_code_organization
+description: Standards for Python project structure, module organization, and dependency management
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Code Organization Best Practices
+
+      ### Project Structure
+      ```
+      project_name/
+      ├── src/
+      │   └── project_name/      # Main package directory
+      │       ├── __init__.py
+      │       ├── core/          # Core functionality
+      │       ├── utils/         # Utility functions
+      │       └── config/        # Configuration handling
+      ├── tests/                 # Test directory
+      │   ├── __init__.py
+      │   ├── unit/
+      │   └── integration/
+      ├── docs/                  # Documentation
+      ├── requirements/
+      │   ├── base.txt          # Base dependencies
+      │   ├── dev.txt           # Development dependencies
+      │   └── prod.txt          # Production dependencies
+      ├── setup.py              # Package setup file
+      ├── pyproject.toml        # Project metadata and build system
+      └── README.md             # Project documentation
+      ```
+
+      ### Module Organization
+      1. Each module should have a single, well-defined responsibility
+      2. Use `__init__.py` files to:
+         - Define package-level imports
+         - Set version information
+         - Implement lazy loading patterns
+
+      ### Import Standards
+      1. Group imports in the following order:
+         ```python
+         # Standard library imports
+         import os
+         import sys
+
+         # Third-party imports
+         import numpy as np
+         import pandas as pd
+
+         # Local application imports
+         from .core import process_data
+         from .utils import helpers
+         ```
+      2. Use absolute imports for external packages
+      3. Use relative imports for internal package modules
+
+      ### Dependency Management
+      1. Use virtual environments for project isolation
+      2. Pin exact versions in requirements files
+      3. Document all dependencies with their purpose
+      4. Use `setup.py` for installable packages
+      5. Consider using `poetry` or `pipenv` for modern dependency management
+
+      ### Package Organization
+      1. Keep related functionality together
+      2. Use meaningful directory names
+      3. Implement circular dependency prevention
+      4. Follow the "Flat is better than nested" principle
+      5. Create focused, single-purpose packages
+
+examples:
+  - input: |
+      # Bad: Flat structure with mixed concerns
+      project/
+      ├── main.py
+      ├── utils.py
+      ├── helpers.py
+      └── stuff.py
+
+      # Good: Organized structure with clear separation
+      project/
+      ├── src/
+      │   └── project/
+      │       ├── __init__.py
+      │       ├── core/
+      │       │   ├── __init__.py
+      │       │   └── main.py
+      │       └── utils/
+      │           ├── __init__.py
+      │           └── helpers.py
+      └── tests/
+          └── test_core.py
+    output: "Project structure follows best practices"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "organization", "structure", "imports", "dependencies"]
+</rule> 

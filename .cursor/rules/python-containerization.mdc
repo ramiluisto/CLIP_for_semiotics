@@ -1,0 +1,301 @@
+---
+description: Standards for Python containerization implementation
+globs: ["**/*.py", "**/Dockerfile", "**/docker-compose.yml"]
+alwaysApply: true
+---
+# Python Containerization Standards
+
+<rule>
+name: python_containerization
+description: Best practices for containerizing Python applications
+filters:
+  - type: file_extension
+    pattern: "\.py$|Dockerfile$|docker-compose\.yml$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Containerization Guidelines
+
+      ### Docker Best Practices
+      1. Base images:
+         - Use official Python images
+         - Prefer slim variants for smaller images
+         - Pin specific versions (e.g., `python:3.9-slim`)
+         - Consider Alpine for minimal images (with caveats)
+         - Document base image selection rationale
+
+      2. Dependencies:
+         - Copy requirements files before other code
+         - Install dependencies in a separate layer
+         - Use multi-stage builds for dev dependencies
+         - Consider using pipenv or poetry with lockfiles
+         - Pin dependency versions
+
+      3. User permissions:
+         - Avoid running as root
+         - Create and use non-privileged users
+         - Set appropriate file permissions
+         - Handle volume mount permissions
+         - Follow principle of least privilege
+
+      4. Example Dockerfile:
+         ```dockerfile
+         # Use specific version
+         FROM python:3.9-slim
+         
+         # Set working directory
+         WORKDIR /app
+         
+         # Create non-root user
+         RUN groupadd -r appuser && useradd -r -g appuser appuser
+         
+         # Copy and install dependencies first (better layer caching)
+         COPY requirements.txt .
+         RUN pip install --no-cache-dir -r requirements.txt
+         
+         # Copy application code
+         COPY . .
+         
+         # Set proper permissions
+         RUN chown -R appuser:appuser /app
+         
+         # Switch to non-root user
+         USER appuser
+         
+         # Command to run the application
+         CMD ["python", "app.py"]
+         ```
+
+      ### Multi-Stage Builds
+      1. Development vs. production:
+         ```dockerfile
+         # Build stage
+         FROM python:3.9 AS builder
+         
+         WORKDIR /build
+         
+         COPY requirements.txt .
+         RUN pip install --no-cache-dir -r requirements.txt
+         
+         COPY . .
+         RUN python setup.py bdist_wheel
+         
+         # Runtime stage
+         FROM python:3.9-slim
+         
+         WORKDIR /app
+         
+         # Copy only the built wheel from the builder stage
+         COPY --from=builder /build/dist/*.whl .
+         
+         # Install only runtime dependencies
+         RUN pip install --no-cache-dir *.whl
+         
+         # Create and use non-root user
+         RUN groupadd -r appuser && useradd -r -g appuser appuser
+         USER appuser
+         
+         CMD ["python", "-m", "myapp"]
+         ```
+
+      2. Benefits:
+         - Smaller final images
+         - Separation of build and runtime environments
+         - Reduced attack surface
+         - Improved build caching
+         - Cleaner dependency management
+
+      ### Container Optimization
+      1. Image size reduction:
+         - Remove unnecessary files
+         - Use .dockerignore
+         - Clean up package caches
+         - Combine RUN commands with && to reduce layers
+         - Consider using Docker squash
+
+      2. Build caching:
+         - Order Dockerfile commands from least to most frequently changed
+         - Separate dependency installation from code copying
+         - Use BuildKit cache mounts for pip/apt caches
+         - Document cache invalidation triggers
+         - Use appropriate CI caching
+
+      3. Performance:
+         - Set appropriate environment variables:
+           - `PYTHONDONTWRITEBYTECODE=1`
+           - `PYTHONUNBUFFERED=1`
+         - Consider PyPy for CPU-bound applications
+         - Profile container performance
+         - Optimize startup time
+         - Use appropriate resource limits
+
+      ### Docker Compose Configurations
+      1. Development setup:
+         ```yaml
+         version: '3.8'
+         
+         services:
+           app:
+             build:
+               context: .
+               dockerfile: Dockerfile.dev
+             volumes:
+               - ./:/app
+             environment:
+               - DEBUG=1
+               - DATABASE_URL=postgresql://user:pass@db:5432/devdb
+             depends_on:
+               - db
+           
+           db:
+             image: postgres:13
+             environment:
+               - POSTGRES_USER=user
+               - POSTGRES_PASSWORD=pass
+               - POSTGRES_DB=devdb
+             volumes:
+               - postgres_data:/var/lib/postgresql/data
+         
+         volumes:
+           postgres_data:
+         ```
+
+      2. Production setup:
+         ```yaml
+         version: '3.8'
+         
+         services:
+           app:
+             image: myapp:${TAG:-latest}
+             restart: unless-stopped
+             environment:
+               - DATABASE_URL=${DATABASE_URL}
+             deploy:
+               replicas: 3
+               resources:
+                 limits:
+                   cpus: '0.5'
+                   memory: 512M
+             healthcheck:
+               test: ["CMD", "python", "-m", "myapp.healthcheck"]
+               interval: 30s
+               timeout: 10s
+               retries: 3
+           
+           nginx:
+             image: nginx:alpine
+             volumes:
+               - ./nginx.conf:/etc/nginx/conf.d/default.conf
+             ports:
+               - "80:80"
+             depends_on:
+               - app
+         ```
+
+      ### Kubernetes Deployment Patterns
+      1. Basic deployment:
+         ```yaml
+         apiVersion: apps/v1
+         kind: Deployment
+         metadata:
+           name: myapp
+         spec:
+           replicas: 3
+           selector:
+             matchLabels:
+               app: myapp
+           template:
+             metadata:
+               labels:
+                 app: myapp
+             spec:
+               containers:
+               - name: myapp
+                 image: myapp:latest
+                 ports:
+                 - containerPort: 8000
+                 resources:
+                   limits:
+                     cpu: "500m"
+                     memory: "512Mi"
+                   requests:
+                     cpu: "100m"
+                     memory: "256Mi"
+                 readinessProbe:
+                   httpGet:
+                     path: /health
+                     port: 8000
+                   initialDelaySeconds: 5
+                   periodSeconds: 10
+                 livenessProbe:
+                   httpGet:
+                     path: /health
+                     port: 8000
+                   initialDelaySeconds: 15
+                   periodSeconds: 20
+         ```
+
+      2. Configuration:
+         - Use ConfigMaps for configuration
+         - Use Secrets for sensitive data
+         - Implement proper health checks
+         - Set appropriate resource limits
+         - Use init containers when needed
+
+      ### Related Guidelines
+      - For security practices, see @python-security
+      - For configuration management, see @python-configuration
+      - For CI/CD integration, see @python-cicd
+      - For logging in containers, see @python-logging
+
+examples:
+  - input: |
+      # Bad: Inefficient Dockerfile
+      FROM python:latest
+      
+      COPY . /app
+      WORKDIR /app
+      
+      RUN pip install -r requirements.txt
+      
+      CMD ["python", "app.py"]
+      
+      # Good: Optimized Dockerfile
+      FROM python:3.9-slim
+      
+      # Set environment variables
+      ENV PYTHONDONTWRITEBYTECODE=1
+      ENV PYTHONUNBUFFERED=1
+      
+      # Create and set working directory
+      WORKDIR /app
+      
+      # Install dependencies first (better caching)
+      COPY requirements.txt .
+      RUN pip install --no-cache-dir -r requirements.txt
+      
+      # Create non-root user
+      RUN groupadd -r appuser && useradd -r -g appuser appuser
+      
+      # Copy application code
+      COPY . .
+      
+      # Set ownership and permissions
+      RUN chown -R appuser:appuser /app
+      
+      # Switch to non-root user
+      USER appuser
+      
+      # Health check
+      HEALTHCHECK --interval=30s --timeout=5s \
+        CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+      
+      # Command to run the application
+      CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "docker", "containerization", "kubernetes", "deployment"]
+</rule> 

@@ -1,0 +1,46 @@
+---
+description: Collection of all Python-related rules and standards
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Collection Rule
+
+<rule>
+name: python_collection
+description: Collection of all Python-related rules and standards
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: import
+    rules:
+      - "@python-api-design"
+      - "@python-cicd"
+      - "@python-code-metrics"
+      - "@python-code-organization"
+      - "@python-code-review"
+      - "@python-concurrency"
+      - "@python-configuration"
+      - "@python-containerization"
+      - "@python-data-processing"
+      - "@python-debugging"
+      - "@python-design-patterns"
+      - "@python-documentation"
+      - "@python-documentation-generation"
+      - "@python-error-handling"
+      - "@python-formatting"
+      - "@python-git-workflow"
+      - "@python-logging"
+      - "@python-machine-learning"
+      - "@python-packaging"
+      - "@python-performance"
+      - "@python-refactoring"
+      - "@python-security"
+      - "@python-testing"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "collection", "standards"]
+</rule>

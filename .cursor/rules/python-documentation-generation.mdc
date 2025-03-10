@@ -1,0 +1,287 @@
+---
+description: Standards for Python documentation generation implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Documentation Generation Standards
+
+<rule>
+name: python_documentation_generation
+description: Best practices for generating and maintaining documentation for Python projects
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Documentation Generation Guidelines
+
+      ### Documentation Tools
+      1. Sphinx:
+         - Industry standard for Python documentation
+         - Use for comprehensive project documentation
+         - Configure with `conf.py` file
+         - Leverage autodoc extension for API docs
+         - Use Napoleon extension for Google/NumPy style docstrings
+
+      2. MkDocs:
+         - Simpler alternative to Sphinx
+         - Markdown-based documentation
+         - Use Material theme for modern look
+         - Configure with `mkdocs.yml`
+         - Good for smaller projects or user guides
+
+      3. Docstrings:
+         - Use Google or NumPy style consistently
+         - Document all public APIs
+         - Include type hints in docstrings
+         - Document exceptions and edge cases
+         - Follow @python-documentation guidelines
+
+      ### Documentation as Code
+      1. Version control:
+         - Keep documentation in the same repository as code
+         - Review documentation changes with code reviews
+         - Use CI/CD for documentation builds
+         - Track documentation coverage
+         - Follow @python-git-workflow guidelines
+
+      2. Documentation structure:
+         ```
+         docs/
+         ├── api/              # API reference (auto-generated)
+         ├── guides/           # How-to guides
+         ├── tutorials/        # Step-by-step tutorials
+         ├── explanation/      # Conceptual explanations
+         ├── _static/          # Static assets
+         ├── conf.py           # Sphinx configuration
+         ├── index.rst         # Documentation home page
+         └── requirements.txt  # Documentation dependencies
+         ```
+
+      3. Documentation types:
+         - API reference (what)
+         - Tutorials (learning-oriented)
+         - How-to guides (problem-oriented)
+         - Explanations (understanding-oriented)
+         - Follow Diátaxis framework (https://diataxis.fr/)
+
+      ### Automated Documentation Workflows
+      1. API documentation generation:
+         ```python
+         # Example Sphinx autodoc configuration in conf.py
+         extensions = [
+             'sphinx.ext.autodoc',
+             'sphinx.ext.napoleon',
+             'sphinx.ext.viewcode',
+             'sphinx.ext.intersphinx',
+         ]
+         
+         autodoc_default_options = {
+             'members': True,
+             'undoc-members': True,
+             'show-inheritance': True,
+         }
+         
+         # Napoleon settings for Google-style docstrings
+         napoleon_google_docstring = True
+         napoleon_numpy_docstring = False
+         napoleon_include_init_with_doc = False
+         napoleon_include_private_with_doc = False
+         napoleon_include_special_with_doc = True
+         ```
+
+      2. CI/CD integration:
+         ```yaml
+         # Example GitHub Action for documentation
+         name: Documentation
+         
+         on:
+           push:
+             branches: [main]
+           pull_request:
+             branches: [main]
+         
+         jobs:
+           docs:
+             runs-on: ubuntu-latest
+             steps:
+             - uses: actions/checkout@v2
+             - name: Set up Python
+               uses: actions/setup-python@v2
+               with:
+                 python-version: 3.9
+             - name: Install dependencies
+               run: |
+                 python -m pip install --upgrade pip
+                 pip install -r docs/requirements.txt
+             - name: Build documentation
+               run: |
+                 cd docs
+                 make html
+             - name: Deploy to GitHub Pages
+               if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+               uses: peaceiris/actions-gh-pages@v3
+               with:
+                 github_token: ${{ secrets.GITHUB_TOKEN }}
+                 publish_dir: ./docs/_build/html
+         ```
+
+      3. Documentation coverage:
+         - Track undocumented code
+         - Use tools like `interrogate` or `docstr-coverage`
+         - Set minimum coverage thresholds
+         - Include in CI/CD pipeline
+         - Generate coverage reports
+
+      ### Documentation Testing
+      1. Code examples:
+         - Use doctest for runnable examples
+         - Verify examples in CI/CD pipeline
+         - Keep examples up-to-date with code changes
+         - Include edge cases in examples
+         - Follow @python-testing guidelines
+
+      2. Link validation:
+         - Check for broken links
+         - Validate external references
+         - Use tools like `sphinx-linkcheck`
+         - Include in CI/CD pipeline
+         - Fix broken links promptly
+
+      3. Example:
+         ```python
+         def add(a, b):
+             """Add two numbers and return the result.
+             
+             Args:
+                 a: First number
+                 b: Second number
+                 
+             Returns:
+                 Sum of a and b
+                 
+             Examples:
+                 >>> add(1, 2)
+                 3
+                 >>> add(-1, 1)
+                 0
+             """
+             return a + b
+         ```
+
+      ### Documentation Versioning
+      1. Version management:
+         - Document API changes between versions
+         - Maintain documentation for previous versions
+         - Use semantic versioning
+         - Tag documentation with release versions
+         - Follow @python-api-design guidelines
+
+      2. Deprecation notices:
+         - Clearly mark deprecated features
+         - Include migration guidance
+         - Set deprecation timeline
+         - Use deprecation warnings in code
+         - Document alternatives to deprecated features
+
+      3. Example configuration:
+         ```python
+         # Example Sphinx configuration for versioning
+         extensions = [
+             # ... other extensions
+             'sphinx_multiversion',
+         ]
+         
+         # Multiversion settings
+         smv_remote_whitelist = r'^origin$'
+         smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'
+         smv_branch_whitelist = r'^(main|develop)$'
+         ```
+
+      ### Related Guidelines
+      - For docstring standards, see @python-documentation
+      - For API design, see @python-api-design
+      - For git workflow, see @python-git-workflow
+      - For testing practices, see @python-testing
+
+examples:
+  - input: |
+      # Bad: No documentation generation setup
+      # Only inline docstrings with no way to generate docs
+      
+      def process_data(data):
+          """Process the data."""
+          return transformed_data
+      
+      # Good: Proper documentation setup
+      # File: docs/conf.py
+      """Sphinx configuration for project documentation."""
+      
+      project = 'MyProject'
+      copyright = '2023, Author'
+      author = 'Author'
+      
+      extensions = [
+          'sphinx.ext.autodoc',
+          'sphinx.ext.napoleon',
+          'sphinx.ext.viewcode',
+          'sphinx.ext.intersphinx',
+      ]
+      
+      autodoc_default_options = {
+          'members': True,
+          'undoc-members': True,
+          'show-inheritance': True,
+      }
+      
+      # File: docs/index.rst
+      """
+      Welcome to MyProject's documentation!
+      ====================================
+      
+      .. toctree::
+         :maxdepth: 2
+         :caption: Contents:
+         
+         installation
+         usage
+         api/modules
+         
+      Indices and tables
+      ==================
+      
+      * :ref:`genindex`
+      * :ref:`modindex`
+      * :ref:`search`
+      """
+      
+      # File: myproject/module.py
+      """Core functionality module."""
+      
+      def process_data(data):
+          """Process the input data and return transformed results.
+          
+          Args:
+              data: The input data to process.
+                  Must be a list of dictionaries.
+          
+          Returns:
+              Processed data with transformations applied.
+          
+          Raises:
+              ValueError: If data is not in the expected format.
+          
+          Examples:
+              >>> process_data([{"value": 1}])
+              [{"value": 2, "processed": True}]
+          """
+          # Implementation
+          return transformed_data
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "documentation", "sphinx", "mkdocs", "docstrings", "api-docs"]
+</rule> 

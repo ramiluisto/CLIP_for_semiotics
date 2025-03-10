@@ -1,0 +1,17 @@
+README.md
+setup.py
+clip_for_humanists.egg-info/PKG-INFO
+clip_for_humanists.egg-info/SOURCES.txt
+clip_for_humanists.egg-info/dependency_links.txt
+clip_for_humanists.egg-info/requires.txt
+clip_for_humanists.egg-info/top_level.txt
+src/__init__.py
+src/clip_utils.py
+src/gps_utils.py
+src/main.py
+src/visualization.py
+tests/__init__.py
+tests/test_clip_utils.py
+tests/test_gps_utils.py
+tests/test_main.py
+tests/test_visualization.py

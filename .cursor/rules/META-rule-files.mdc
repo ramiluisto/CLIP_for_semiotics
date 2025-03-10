@@ -1,0 +1,139 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Cursor Rules Location and File Handling
+
+⚠️ **CRITICAL: FOLLOW @meta_file_creation PROCEDURE** ⚠️
+⚠️ **ALL RULES MUST BE IN PROJECT ROOT/.cursor/rules/** ⚠️
+
+<rule>
+name: cursor_rules_location
+description: Standards for placing Cursor rule files in the correct directory and handling file modifications
+filters:
+  # Match any .mdc files
+  - type: file_extension
+    pattern: "\.mdc$"
+  # Match files that look like Cursor rules
+  - type: content
+    pattern: "(?s)<rule>.*?</rule>"
+  # Match file creation or modification events
+  - type: event
+    pattern: "(file_create|file_modify)"
+
+actions:
+
+- type: reject
+    conditions:
+  - pattern: "^(?!\.cursor\/rules\/.*\.mdc$)"
+        message: |
+          ❌ INVALID RULE FILE LOCATION
+
+          All Cursor rule files (.mdc) MUST be placed in:
+          PROJECT_ROOT/.cursor/rules/
+
+          Current location is invalid. Please move the file to the correct location.
+
+          Example of correct path:
+          my-project/
+          └── .cursor/
+              └── rules/
+                  └── your-rule-name.mdc
+
+- type: suggest
+    message: |
+
+    ## ⚠️ CRITICAL: Rule File Management
+
+    ### File Creation and Modification
+
+      1. ⚠️ **FOLLOW @META-file-creation PROCEDURE**
+         - This is CRITICAL for all rule file operations
+         - No exceptions or shortcuts allowed
+         - Always verify file contents as specified
+
+    ### Documentation Requirements
+
+      1. Update README.md in .cursor/rules/
+         ```bash
+         # If README doesn't exist, create it
+         touch .cursor/rules/README.md
+         
+         # Add/update rule documentation
+         # Format:
+         # - Rule name
+         # - Brief description
+         # - Any critical notes
+         ```
+
+      2. Git Commit Requirements
+         ```bash
+         # Stage both rule and README changes
+         git add .cursor/rules/your-rule.mdc
+         git add .cursor/rules/README.md
+         
+         # Commit with informative message
+         git commit -m "rules: [add|update] your-rule - brief description
+         
+         - What changed
+         - Why it changed
+         - Any breaking changes"
+         ```
+
+    ## Directory Structure Requirements
+
+      ```
+      my-project/               # Project root
+      ├── .cursor/
+      │   └── rules/           # ONLY valid location for .mdc files
+      │       ├── README.md    # Documentation of all rules
+      │       ├── rule1.mdc
+      │       └── rule2.mdc
+      └── ...
+      ```
+
+    ## ⚠️ Common Mistakes to Avoid
+
+      1. ❌ Not following @META-file-creation procedure
+      2. ❌ Placing rules in subdirectories (e.g., src/.cursor/rules/)
+      3. ❌ Not updating README.md
+      4. ❌ Not committing changes
+      5. ❌ Uninformative commit messages
+      6. ❌ Creating files from subdirectories instead of project root
+
+    ## Rule References
+
+      When referencing other rules within a rule file, always use the `@` syntax:
+      - ✅ `@black-formatting`
+      - ❌ `[Black Formatting](mdc:black-formatting.mdc)`
+
+examples:
+
+- input: |
+
+    # Bad: Not following @meta_file_creation
+    touch .cursor/rules/my-rule.mdc
+
+    # Bad: No README update
+    mv rules_temp/my-rule.txt .cursor/rules/my-rule.mdc
+    git add .cursor/rules/my-rule.mdc
+    git commit -m "add rule"
+
+    # Good: Complete process
+    # 1. Follow @meta_file_creation
+    # 2. Update README
+    echo "- my-rule: Brief description" >> .cursor/rules/README.md
+    # 3. Proper commit
+    git add .cursor/rules/my-rule.mdc .cursor/rules/README.md
+    git commit -m "rules: add my-rule - handles xyz
+    
+    - Implements handling for xyz
+    - Requires abc configuration
+    - Breaking: changes old xyz format"
+    output: "Correctly handled rule file creation and documentation"
+
+metadata:
+  priority: critical
+  version: 1.3
+</rule> 

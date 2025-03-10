@@ -1,0 +1,104 @@
+---
+description: Standards for Python error handling implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Error Handling Standards
+
+<rule>
+name: python_error_handling
+description: Enforces Python error handling best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Error Handling Guidelines
+
+      1. Exception Hierarchy
+         - Create custom exceptions for your application
+         - Inherit from appropriate built-in exceptions
+         - Use specific exceptions over generic ones
+         - Document exception classes thoroughly
+
+      2. Try-Except Blocks
+         - Catch specific exceptions, not bare except
+         - Keep try blocks as small as possible
+         - Handle each exception type appropriately
+         - Use else clause for code that runs if no exception
+         - Use finally for cleanup code
+
+      3. Error Messages
+         - Write clear, descriptive error messages
+         - Include relevant variable values
+         - Mention expected vs actual values
+         - Include troubleshooting hints when appropriate
+
+      4. Logging vs Raising
+         - Log recoverable errors, raise unrecoverable ones
+         - Include stack traces for debugging
+         - Use appropriate logging levels (see @python-logging)
+         - Add context to logged errors
+         - Follow structured logging practices from @python-logging
+
+      5. Context Managers
+         - Use context managers (with) for resource management
+         - Implement __enter__ and __exit__ methods
+         - Handle cleanup in context managers
+         - Use contextlib when appropriate
+
+      6. Chaining Exceptions
+         - Use raise from for exception chaining
+         - Preserve original exception context
+         - Add meaningful context when re-raising
+         - Clean up exception context when appropriate
+
+      7. Related Guidelines
+         - For logging best practices, see @python-logging
+         - For debugging techniques, see @python-debugging
+         - For security considerations, see @python-security
+
+examples:
+  - input: |
+      # Bad error handling
+      try:
+          do_something()
+      except:
+          print("Error")
+      
+      # Good error handling
+      class ValidationError(ValueError):
+          """Raised when data validation fails."""
+          pass
+
+      def process_data(data: dict) -> None:
+          try:
+              value = data["key"]
+          except KeyError as e:
+              raise ValidationError(
+                  f"Missing required field 'key' in data"
+              ) from e
+          
+          try:
+              result = complex_operation(value)
+          except ComplexError as e:
+              logger.error(
+                  "Complex operation failed",
+                  extra={
+                      "value": value,
+                      "error": str(e)
+                  }
+              )
+              raise
+          else:
+              logger.info("Operation completed successfully")
+          finally:
+              cleanup_resources()
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "error-handling", "exceptions"]
+</rule> 

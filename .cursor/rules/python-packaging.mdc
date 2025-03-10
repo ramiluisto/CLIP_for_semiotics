@@ -1,0 +1,121 @@
+---
+description: Standards for Python packaging implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Packaging Standards
+
+<rule>
+name: python_packaging
+description: Enforces Python packaging and distribution best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$|setup\.py$|pyproject\.toml$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Packaging Guidelines
+
+      1. Project Structure
+         - Use standard project layout
+         - Separate source and tests
+         - Include necessary package files
+         - Use src layout when appropriate
+         - Follow naming conventions
+
+      2. Dependencies
+         - Specify version ranges appropriately
+         - Use dependency groups
+         - Pin development dependencies
+         - Document all dependencies
+         - Use virtual environments
+
+      3. Package Configuration
+         - Use pyproject.toml for modern packaging
+         - Include all necessary metadata
+         - Specify Python version requirements
+         - Define entry points properly
+         - Include package data correctly
+
+      4. Documentation
+         - Maintain comprehensive README
+         - Include installation instructions
+         - Document all dependencies
+         - Provide usage examples
+         - Include contribution guidelines
+
+      5. Distribution
+         - Use proper version numbers
+         - Create source distributions
+         - Build wheel distributions
+         - Sign package releases
+         - Upload to PyPI securely
+
+      6. Development Tools
+         - Configure development tools properly
+         - Use pre-commit hooks
+         - Set up CI/CD pipelines
+         - Include tox configuration
+         - Configure coverage tools
+
+examples:
+  - input: |
+      # Bad packaging
+      setup(
+          name="mypackage",
+          version="1.0",
+      )
+      
+      # Good packaging
+      # pyproject.toml
+      [build-system]
+      requires = ["hatchling"]
+      build-backend = "hatchling.build"
+      
+      [project]
+      name = "mypackage"
+      version = "1.0.0"
+      description = "A well-structured Python package"
+      readme = "README.md"
+      requires-python = ">=3.8"
+      license = "MIT"
+      authors = [
+          {name = "Your Name", email = "your.email@example.com"}
+      ]
+      dependencies = [
+          "requests>=2.28.0",
+          "pyyaml~=6.0",
+      ]
+      
+      [project.optional-dependencies]
+      test = [
+          "pytest>=7.0.0",
+          "pytest-cov>=4.0.0",
+      ]
+      dev = [
+          "black>=23.0.0",
+          "mypy>=1.0.0",
+      ]
+      
+      [project.scripts]
+      mycli = "mypackage.cli:main"
+      
+      # Directory structure
+      mypackage/
+      ├── src/
+      │   └── mypackage/
+      │       ├── __init__.py
+      │       ├── core.py
+      │       └── cli.py
+      ├── tests/
+      │   └── test_core.py
+      ├── pyproject.toml
+      ├── README.md
+      └── LICENSE
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "packaging", "distribution"]
+</rule> 

@@ -1,0 +1,124 @@
+---
+description: Standards for Python configuration implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Configuration Management Standards
+
+<rule>
+name: python_configuration
+description: Standards for managing configuration in Python applications
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Configuration Management Best Practices
+
+      ### Environment Variables
+      1. Use environment variables for sensitive configuration:
+         ```python
+         import os
+         from dotenv import load_dotenv
+
+         # Load environment variables from .env file
+         load_dotenv()
+
+         # Access with fallback
+         DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///default.db')
+         ```
+
+      2. Never hardcode sensitive information:
+         - API keys
+         - Passwords
+         - Connection strings
+         - Secret tokens
+
+      ### Configuration Files
+      1. Use appropriate format for config files:
+         ```python
+         # config.yaml
+         database:
+           host: localhost
+           port: 5432
+           name: myapp
+
+         # Loading configuration
+         import yaml
+         with open('config.yaml') as f:
+             config = yaml.safe_load(f)
+         ```
+
+      2. Support multiple environments:
+         ```
+         config/
+         ├── default.yaml     # Default settings
+         ├── development.yaml # Development overrides
+         ├── staging.yaml    # Staging overrides
+         └── production.yaml # Production overrides
+         ```
+
+      ### Secrets Management
+      1. Use secure secrets management:
+         - AWS Secrets Manager
+         - HashiCorp Vault
+         - Azure Key Vault
+      2. Implement secret rotation
+      3. Use least privilege access
+
+      ### Configuration Validation
+      1. Validate configuration at startup:
+         ```python
+         from pydantic import BaseSettings
+
+         class Settings(BaseSettings):
+             database_url: str
+             api_key: str
+             debug: bool = False
+
+             class Config:
+                 env_file = '.env'
+         ```
+
+      2. Implement type checking and validation
+      3. Provide clear error messages for missing config
+
+      ### Best Practices
+      1. Use hierarchical configuration
+      2. Implement configuration caching
+      3. Support configuration reloading
+      4. Document all configuration options
+      5. Use strong typing for configuration
+
+examples:
+  - input: |
+      # Bad: Hardcoded configuration
+      DB_PASSWORD = "secret123"
+      API_KEY = "1234567890"
+
+      # Bad: Unvalidated configuration
+      config = load_config()
+      db = Database(config['db_url'])
+
+      # Good: Environment variables with validation
+      from pydantic import BaseSettings
+
+      class Settings(BaseSettings):
+          database_url: str
+          api_key: str
+          debug: bool = False
+
+          class Config:
+              env_file = '.env'
+
+      settings = Settings()
+      db = Database(settings.database_url)
+    output: "Configuration follows security best practices"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "configuration", "security", "environment-variables"]
+</rule> 

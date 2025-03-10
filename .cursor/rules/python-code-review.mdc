@@ -1,0 +1,152 @@
+---
+description: Standards for Python code review implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Code Review Standards
+
+<rule>
+name: python_code_review
+description: Standards for Python code review process and best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Code Review Best Practices
+
+      ### Code Review Checklist
+      1. Code Style and Formatting:
+         - PEP 8 compliance
+         - Consistent naming conventions
+         - Proper indentation
+         - Line length limits
+         - Docstring format
+
+      2. Code Quality:
+         ```python
+         # Bad: Unclear variable names
+         def p(x, y):
+             return x * y
+
+         # Good: Clear, descriptive names
+         def calculate_product(multiplier: float, multiplicand: float) -> float:
+             """Calculate the product of two numbers.
+             
+             Args:
+                 multiplier: The first number to multiply
+                 multiplicand: The second number to multiply
+             
+             Returns:
+                 The product of the two numbers
+             """
+             return multiplier * multiplicand
+         ```
+
+      3. Architecture and Design:
+         - SOLID principles
+         - Design patterns usage
+         - Module organization
+         - Dependency management
+
+      ### Common Pitfalls
+      1. Performance Issues:
+         ```python
+         # Bad: Inefficient list operations
+         result = []
+         for i in range(1000000):
+             result = result + [i]  # Creates new list each time
+
+         # Good: Use list append
+         result = []
+         for i in range(1000000):
+             result.append(i)  # More efficient
+         ```
+
+      2. Security Concerns:
+         - Input validation
+         - SQL injection prevention
+         - Secure password handling
+         - API key management
+
+      3. Error Handling:
+         ```python
+         # Bad: Bare except
+         try:
+             process_data()
+         except:
+             pass
+
+         # Good: Specific exception handling
+         try:
+             process_data()
+         except ValueError as e:
+             logger.error(f"Invalid data format: {e}")
+             raise
+         except IOError as e:
+             logger.error(f"IO operation failed: {e}")
+             raise
+         ```
+
+      ### Best Practices for Reviewers
+      1. Review Process:
+         - Read the description and context
+         - Understand the requirements
+         - Check test coverage
+         - Verify documentation
+         - Look for security issues
+
+      2. Communication:
+         - Be constructive and respectful
+         - Explain the "why" behind comments
+         - Suggest alternatives
+         - Acknowledge good practices
+
+      3. Focus Areas:
+         - Code correctness
+         - Test coverage
+         - Documentation
+         - Performance
+         - Security
+         - Maintainability
+
+      ### Best Practices for Authors
+      1. PR Preparation:
+         - Write clear descriptions
+         - Include test cases
+         - Update documentation
+         - Self-review first
+         - Keep changes focused
+
+      2. Response to Reviews:
+         - Address all comments
+         - Explain design decisions
+         - Update code promptly
+         - Ask for clarification
+         - Be open to feedback
+
+examples:
+  - input: |
+      # Bad: Unclear PR description
+      "Fixed the bug"
+
+      # Good: Clear PR description
+      """
+      Fix: User Authentication Timeout Issue
+
+      - Increased token expiration time to 24 hours
+      - Added refresh token mechanism
+      - Updated tests to cover token refresh
+      - Updated documentation
+
+      Related issue: #123
+      """
+    output: "PR follows documentation best practices"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "code-review", "best-practices", "quality"]
+</rule> 

@@ -1,0 +1,97 @@
+---
+description: Standards for Python documentation implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Documentation Standards
+
+<rule>
+name: python_documentation
+description: Enforces Python documentation best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Documentation Guidelines
+
+      1. Module Documentation
+         - Every module should have a docstring at the top
+         - Include purpose, author, and any important notes
+         - Document any module-level variables
+
+      2. Function/Method Documentation
+         - Use Google-style docstrings
+         - Document:
+           - Args/Parameters
+           - Returns
+           - Raises (if applicable)
+           - Examples (if helpful)
+         - Include type hints in function signatures
+
+      3. Class Documentation
+         - Document class purpose and behavior
+         - Document all public attributes
+         - Include usage examples for complex classes
+
+      4. Inline Comments
+         - Use sparingly, only for complex logic
+         - Explain why, not what
+         - Keep comments up-to-date with code
+
+      5. Type Hints
+         - Use type hints for function arguments and return values
+         - Import types from typing module
+         - Use Optional[] for nullable parameters
+         - Use Union[] for multiple types
+
+      6. README and Project Documentation
+         - Maintain an up-to-date README.md
+         - Include installation instructions
+         - Document dependencies and versions
+         - Provide usage examples
+
+examples:
+  - input: |
+      # Bad documentation
+      def process_data(data):
+          # processes the data
+          return result
+      
+      # Good documentation
+      from typing import List, Dict, Optional
+
+      def process_data(
+          data: List[Dict[str, str]],
+          config: Optional[Dict[str, str]] = None
+      ) -> Dict[str, List[str]]:
+          """Process the input data according to the configuration.
+          
+          Args:
+              data: List of dictionaries containing the raw data.
+                   Each dictionary should have 'key' and 'value' strings.
+              config: Optional configuration dictionary. If None, default
+                     configuration will be used.
+          
+          Returns:
+              A dictionary mapping categories to lists of processed values.
+          
+          Raises:
+              ValueError: If the data format is invalid.
+          
+          Example:
+              >>> data = [{"key": "cat1", "value": "val1"}]
+              >>> process_data(data)
+              {"cat1": ["val1"]}
+          """
+          result = {}
+          # Implementation...
+          return result
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "documentation", "docstrings"]
+</rule> 

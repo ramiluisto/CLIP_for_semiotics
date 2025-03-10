@@ -1,0 +1,408 @@
+[
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827130716.jpg",
+    "similarities": {
+      "scary": 0.17901544272899628,
+      "friendly": 0.20846755802631378,
+      "warning": 0.2038750797510147,
+      "information": 0.20886898040771484,
+      "official": 0.18027544021606445
+    },
+    "gps_coordinates": [
+      60.15700277777778,
+      24.872122222222224
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240818090459.jpg",
+    "similarities": {
+      "scary": 0.21929290890693665,
+      "friendly": 0.2175171822309494,
+      "warning": 0.27286195755004883,
+      "information": 0.2409621626138687,
+      "official": 0.20335254073143005
+    },
+    "gps_coordinates": [
+      60.18610555555555,
+      24.61998888888889
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827133356.jpg",
+    "similarities": {
+      "scary": 0.1808551698923111,
+      "friendly": 0.19898074865341187,
+      "warning": 0.20054854452610016,
+      "information": 0.19743284583091736,
+      "official": 0.19081108272075653
+    },
+    "gps_coordinates": [
+      60.157758333333334,
+      24.859761111111112
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240325101218.jpg",
+    "similarities": {
+      "scary": 0.19267767667770386,
+      "friendly": 0.199793741106987,
+      "warning": 0.2513674199581146,
+      "information": 0.2267978936433792,
+      "official": 0.19987905025482178
+    },
+    "gps_coordinates": [
+      60.18906666666666,
+      24.623297222222224
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240416095857.jpg",
+    "similarities": {
+      "scary": 0.19327761232852936,
+      "friendly": 0.18866108357906342,
+      "warning": 0.23840630054473877,
+      "information": 0.23193049430847168,
+      "official": 0.1947317272424698
+    },
+    "gps_coordinates": [
+      60.185177777777774,
+      24.621155555555557
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240717170951.jpg",
+    "similarities": {
+      "scary": 0.19097816944122314,
+      "friendly": 0.1984453946352005,
+      "warning": 0.23382686078548431,
+      "information": 0.21242624521255493,
+      "official": 0.21886542439460754
+    },
+    "gps_coordinates": [
+      60.19047777777777,
+      24.620630555555557
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827130538.jpg",
+    "similarities": {
+      "scary": 0.1884647160768509,
+      "friendly": 0.1959504634141922,
+      "warning": 0.23720955848693848,
+      "information": 0.2192864567041397,
+      "official": 0.18563714623451233
+    },
+    "gps_coordinates": [
+      60.15643333333333,
+      24.870244444444445
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240828085937.jpg",
+    "similarities": {
+      "scary": 0.20834825932979584,
+      "friendly": 0.2244863510131836,
+      "warning": 0.2458517700433731,
+      "information": 0.23132897913455963,
+      "official": 0.21554210782051086
+    },
+    "gps_coordinates": [
+      60.190891666666666,
+      24.620250000000002
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240325101009.jpg",
+    "similarities": {
+      "scary": 0.19017723202705383,
+      "friendly": 0.20141778886318207,
+      "warning": 0.220032200217247,
+      "information": 0.19859379529953003,
+      "official": 0.18661822378635406
+    },
+    "gps_coordinates": [
+      60.190466666666666,
+      24.62122777777778
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827142525.jpg",
+    "similarities": {
+      "scary": 0.20916619896888733,
+      "friendly": 0.21223367750644684,
+      "warning": 0.2608632445335388,
+      "information": 0.2250528633594513,
+      "official": 0.1967839151620865
+    },
+    "gps_coordinates": [
+      60.157177777777775,
+      24.869205555555556
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20231116100742.jpg",
+    "similarities": {
+      "scary": 0.2084679901599884,
+      "friendly": 0.22031106054782867,
+      "warning": 0.257333904504776,
+      "information": 0.21624667942523956,
+      "official": 0.19705182313919067
+    },
+    "gps_coordinates": [
+      60.19015833333333,
+      24.622308333333333
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827130604.jpg",
+    "similarities": {
+      "scary": 0.18603727221488953,
+      "friendly": 0.20195087790489197,
+      "warning": 0.23893579840660095,
+      "information": 0.210541233420372,
+      "official": 0.19143396615982056
+    },
+    "gps_coordinates": [
+      60.15632222222222,
+      24.870327777777778
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240325100812.jpg",
+    "similarities": {
+      "scary": 0.20360274612903595,
+      "friendly": 0.19852778315544128,
+      "warning": 0.2570640444755554,
+      "information": 0.21486513316631317,
+      "official": 0.18941590189933777
+    },
+    "gps_coordinates": [
+      60.19020833333333,
+      24.620266666666666
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827130741.jpg",
+    "similarities": {
+      "scary": 0.16319584846496582,
+      "friendly": 0.1881381869316101,
+      "warning": 0.18227384984493256,
+      "information": 0.20293788611888885,
+      "official": 0.17104578018188477
+    },
+    "gps_coordinates": [
+      60.15660277777778,
+      24.871088888888888
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240717171028.jpg",
+    "similarities": {
+      "scary": 0.19060653448104858,
+      "friendly": 0.19504113495349884,
+      "warning": 0.19513605535030365,
+      "information": 0.20970912277698517,
+      "official": 0.18131551146507263
+    },
+    "gps_coordinates": [
+      60.190838888888884,
+      24.61995277777778
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240417090305.jpg",
+    "similarities": {
+      "scary": 0.17618997395038605,
+      "friendly": 0.18841144442558289,
+      "warning": 0.21745364367961884,
+      "information": 0.22123019397258759,
+      "official": 0.1909143030643463
+    },
+    "gps_coordinates": [
+      60.18922499999999,
+      24.612772222222222
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827130815.jpg",
+    "similarities": {
+      "scary": 0.19956356287002563,
+      "friendly": 0.2065659463405609,
+      "warning": 0.2501868009567261,
+      "information": 0.23133032023906708,
+      "official": 0.19340521097183228
+    },
+    "gps_coordinates": [
+      60.15667777777777,
+      24.871708333333334
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827142307.jpg",
+    "similarities": {
+      "scary": 0.18604061007499695,
+      "friendly": 0.20048485696315765,
+      "warning": 0.24821539223194122,
+      "information": 0.21846500039100647,
+      "official": 0.1865064948797226
+    },
+    "gps_coordinates": [
+      60.157177777777775,
+      24.869205555555556
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240827131505.jpg",
+    "similarities": {
+      "scary": 0.1824798434972763,
+      "friendly": 0.18839028477668762,
+      "warning": 0.23532690107822418,
+      "information": 0.21679933369159698,
+      "official": 0.1758950650691986
+    },
+    "gps_coordinates": [
+      60.155744444444444,
+      24.87181388888889
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240325100746.jpg",
+    "similarities": {
+      "scary": 0.20322859287261963,
+      "friendly": 0.19591917097568512,
+      "warning": 0.25313135981559753,
+      "information": 0.21371883153915405,
+      "official": 0.19420574605464935
+    },
+    "gps_coordinates": [
+      60.18845555555555,
+      24.61872222222222
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240718180446.jpg",
+    "similarities": {
+      "scary": 0.18077997863292694,
+      "friendly": 0.1896163523197174,
+      "warning": 0.20378883183002472,
+      "information": 0.2226003259420395,
+      "official": 0.1826671063899994
+    },
+    "gps_coordinates": [
+      60.18969166666666,
+      24.618508333333335
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240505084727.jpg",
+    "similarities": {
+      "scary": 0.19743315875530243,
+      "friendly": 0.20947912335395813,
+      "warning": 0.23689237236976624,
+      "information": 0.23258300125598907,
+      "official": 0.19936563074588776
+    },
+    "gps_coordinates": [
+      60.190216666666664,
+      24.617844444444444
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240719123416.jpg",
+    "similarities": {
+      "scary": 0.21395260095596313,
+      "friendly": 0.22861561179161072,
+      "warning": 0.25616756081581116,
+      "information": 0.2467111498117447,
+      "official": 0.205274760723114
+    },
+    "gps_coordinates": [
+      60.18554722222222,
+      24.59628611111111
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240724174733.jpg",
+    "similarities": {
+      "scary": 0.21032223105430603,
+      "friendly": 0.2015438824892044,
+      "warning": 0.28675222396850586,
+      "information": 0.22024911642074585,
+      "official": 0.2052409052848816
+    },
+    "gps_coordinates": [
+      60.18554444444444,
+      24.617827777777777
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240618091634.jpg",
+    "similarities": {
+      "scary": 0.19925175607204437,
+      "friendly": 0.1985226571559906,
+      "warning": 0.22334468364715576,
+      "information": 0.2234785556793213,
+      "official": 0.1966330111026764
+    },
+    "gps_coordinates": [
+      60.18556944444444,
+      24.61878888888889
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240724174724.jpg",
+    "similarities": {
+      "scary": 0.20548437535762787,
+      "friendly": 0.2032274454832077,
+      "warning": 0.2515866160392761,
+      "information": 0.23602238297462463,
+      "official": 0.22896277904510498
+    },
+    "gps_coordinates": [
+      60.18554444444444,
+      24.617827777777777
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/img20240522152104.jpg",
+    "similarities": {
+      "scary": 0.18947622179985046,
+      "friendly": 0.19583375751972198,
+      "warning": 0.24551913142204285,
+      "information": 0.21865391731262207,
+      "official": 0.18267951905727386
+    },
+    "gps_coordinates": [
+      60.16943611111111,
+      24.7716
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/img20240513091916.jpg",
+    "similarities": {
+      "scary": 0.21010348200798035,
+      "friendly": 0.2010144591331482,
+      "warning": 0.2394869029521942,
+      "information": 0.24436262249946594,
+      "official": 0.20445407927036285
+    },
+    "gps_coordinates": [
+      60.18478611111111,
+      24.617752777777778
+    ]
+  },
+  {
+    "filepath": "/Users/ramiluisto/CLIP_for_humanists/img/IMG20240417090228.jpg",
+    "similarities": {
+      "scary": 0.20259790122509003,
+      "friendly": 0.21136100590229034,
+      "warning": 0.2512610852718353,
+      "information": 0.22680391371250153,
+      "official": 0.1979963183403015
+    },
+    "gps_coordinates": [
+      60.18923333333333,
+      24.612761111111112
+    ]
+  }
+]

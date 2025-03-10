@@ -1,0 +1,304 @@
+---
+description: Standards for Python data processing implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Data Processing Standards
+
+<rule>
+name: python_data_processing
+description: Best practices for data processing and ETL operations in Python
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Data Processing Guidelines
+
+      ### ETL Patterns
+      1. Extract phase:
+         - Separate data source connections from extraction logic
+         - Handle connection errors gracefully
+         - Implement retry mechanisms for network sources
+         - Use appropriate authentication methods
+         - Document data source schemas and APIs
+
+      2. Transform phase:
+         - Keep transformations as pure functions when possible
+         - Chain transformations in a clear, logical order
+         - Document transformation steps and their purpose
+         - Validate data before and after transformations
+         - Handle edge cases and missing data explicitly
+
+      3. Load phase:
+         - Implement transaction support for database targets
+         - Use batch operations for better performance
+         - Validate data before loading
+         - Implement proper error handling and rollback
+         - Log successful and failed operations
+
+      4. ETL pipeline structure:
+         ```python
+         def extract(source_config):
+             """Extract data from source."""
+             # Connection and extraction logic
+             return raw_data
+             
+         def transform(raw_data, transform_config):
+             """Transform the extracted data."""
+             # Transformation logic
+             return transformed_data
+             
+         def load(transformed_data, target_config):
+             """Load data into target system."""
+             # Loading logic
+             return load_results
+             
+         def run_pipeline(source_config, transform_config, target_config):
+             """Run the complete ETL pipeline."""
+             try:
+                 raw_data = extract(source_config)
+                 transformed_data = transform(raw_data, transform_config)
+                 results = load(transformed_data, target_config)
+                 return results
+             except Exception as e:
+                 # Error handling and logging
+                 logger.error(f"Pipeline failed: {e}")
+                 raise
+         ```
+
+      ### Batch vs. Stream Processing
+      1. Batch processing:
+         - Process data in chunks or windows
+         - Use generators for memory efficiency
+         - Implement checkpointing for long-running jobs
+         - Consider parallel processing for large batches
+         - Monitor memory usage during processing
+
+      2. Stream processing:
+         - Use appropriate streaming libraries (e.g., Faust, Streamz)
+         - Implement backpressure mechanisms
+         - Handle late-arriving data
+         - Consider windowing strategies
+         - Ensure fault tolerance and recovery
+
+      3. Hybrid approaches:
+         - Micro-batching for near real-time processing
+         - Lambda architecture for combined batch/stream
+         - Kappa architecture for stream-first processing
+         - Document architecture decisions and trade-offs
+
+      ### Data Validation Techniques
+      1. Schema validation:
+         - Use schema libraries (Pydantic, Marshmallow)
+         - Validate at system boundaries
+         - Document schema constraints
+         - Version schemas appropriately
+         - Handle validation errors gracefully
+
+      2. Data quality checks:
+         - Check for missing values
+         - Validate data types and ranges
+         - Implement business rule validation
+         - Check referential integrity
+         - Detect outliers and anomalies
+
+      3. Validation framework:
+         ```python
+         from pydantic import BaseModel, validator
+         
+         class DataRecord(BaseModel):
+             id: int
+             name: str
+             value: float
+             
+             @validator('value')
+             def value_must_be_positive(cls, v):
+                 if v <= 0:
+                     raise ValueError('Value must be positive')
+                 return v
+         
+         def validate_data(data):
+             """Validate a collection of data records."""
+             valid_records = []
+             errors = []
+             
+             for record in data:
+                 try:
+                     valid_record = DataRecord(**record)
+                     valid_records.append(valid_record)
+                 except Exception as e:
+                     errors.append((record, str(e)))
+                     
+             return valid_records, errors
+         ```
+
+      ### Performance Optimization
+      1. Memory management:
+         - Use generators and iterators for large datasets
+         - Process data in chunks
+         - Implement streaming algorithms when possible
+         - Release references to large objects when done
+         - Monitor memory usage during processing
+
+      2. Parallel processing:
+         - Use multiprocessing for CPU-bound tasks
+         - Use threading or asyncio for I/O-bound tasks
+         - Consider distributed processing for very large datasets
+         - Implement proper synchronization and locking
+         - Follow @python-concurrency guidelines
+
+      3. Vectorized operations:
+         - Use NumPy for numerical operations
+         - Use Pandas for tabular data operations
+         - Prefer vectorized operations over loops
+         - Use appropriate data structures
+         - Profile performance bottlenecks
+
+      4. Caching strategies:
+         - Cache expensive computations
+         - Use appropriate caching levels
+         - Implement cache invalidation
+         - Consider distributed caching for shared data
+         - Monitor cache hit/miss rates
+
+      ### Error Handling and Recovery
+      1. Graceful degradation:
+         - Handle partial failures
+         - Implement circuit breakers for external services
+         - Provide fallback mechanisms
+         - Log detailed error information
+         - Follow @python-error-handling guidelines
+
+      2. Retry mechanisms:
+         ```python
+         import time
+         from functools import wraps
+         
+         def retry(max_attempts, delay=1, backoff=2, exceptions=(Exception,)):
+             """Retry decorator with exponential backoff."""
+             def decorator(func):
+                 @wraps(func)
+                 def wrapper(*args, **kwargs):
+                     attempt = 0
+                     current_delay = delay
+                     
+                     while attempt < max_attempts:
+                         try:
+                             return func(*args, **kwargs)
+                         except exceptions as e:
+                             attempt += 1
+                             if attempt == max_attempts:
+                                 raise
+                                 
+                             logger.warning(
+                                 f"Attempt {attempt} failed: {e}. "
+                                 f"Retrying in {current_delay}s."
+                             )
+                             time.sleep(current_delay)
+                             current_delay *= backoff
+                             
+                 return wrapper
+             return decorator
+         
+         @retry(max_attempts=3, exceptions=(ConnectionError, TimeoutError))
+         def fetch_data(url):
+             """Fetch data from URL with retry."""
+             # Fetch implementation
+         ```
+
+      ### Related Guidelines
+      - For concurrency patterns, see @python-concurrency
+      - For error handling, see @python-error-handling
+      - For logging practices, see @python-logging
+      - For performance optimization, see @python-performance
+
+examples:
+  - input: |
+      # Bad: Monolithic data processing
+      def process_data(input_file, output_file):
+          # Read data
+          with open(input_file, 'r') as f:
+              data = f.readlines()
+          
+          # Transform data (all in one function)
+          results = []
+          for line in data:
+              fields = line.strip().split(',')
+              if len(fields) < 3:
+                  continue
+              
+              try:
+                  value = float(fields[2])
+                  if value > 0:
+                      transformed = {
+                          'id': int(fields[0]),
+                          'name': fields[1],
+                          'value': value * 1.5
+                      }
+                      results.append(transformed)
+              except ValueError:
+                  print(f"Error processing line: {line}")
+          
+          # Write results
+          with open(output_file, 'w') as f:
+              for item in results:
+                  f.write(f"{item['id']},{item['name']},{item['value']}\n")
+      
+      # Good: Structured ETL pipeline
+      def extract(input_file):
+          """Extract data from input file."""
+          with open(input_file, 'r') as f:
+              return f.readlines()
+              
+      def parse_line(line):
+          """Parse a single line of data."""
+          fields = line.strip().split(',')
+          if len(fields) < 3:
+              return None
+              
+          try:
+              return {
+                  'id': int(fields[0]),
+                  'name': fields[1],
+                  'value': float(fields[2])
+              }
+          except ValueError as e:
+              logger.error(f"Error parsing line: {line}. Error: {e}")
+              return None
+              
+      def transform(raw_data):
+          """Transform the extracted data."""
+          parsed_data = [parse_line(line) for line in raw_data]
+          valid_data = [item for item in parsed_data if item is not None]
+          
+          # Apply business transformations
+          for item in valid_data:
+              item['value'] *= 1.5
+              
+          return valid_data
+              
+      def load(transformed_data, output_file):
+          """Load data to output file."""
+          with open(output_file, 'w') as f:
+              for item in transformed_data:
+                  f.write(f"{item['id']},{item['name']},{item['value']}\n")
+                  
+      def run_pipeline(input_file, output_file):
+          """Run the complete ETL pipeline."""
+          try:
+              raw_data = extract(input_file)
+              transformed_data = transform(raw_data)
+              load(transformed_data, output_file)
+              logger.info(f"Processed {len(transformed_data)} records")
+          except Exception as e:
+              logger.error(f"Pipeline failed: {e}")
+              raise
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "data-processing", "etl", "performance", "validation"]
+</rule> 

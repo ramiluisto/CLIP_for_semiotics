@@ -1,0 +1,99 @@
+---
+description: Standards for Python testing implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Testing Standards
+
+<rule>
+name: python_testing
+description: Enforces Python testing best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+  - type: file_path
+    pattern: "test_.*\.py$|.*_test\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Testing Guidelines
+
+      1. Test File Organization
+         - Place tests in a `tests` directory
+         - Name test files with prefix `test_` or suffix `_test`
+         - Mirror the package structure in tests
+         - Use `conftest.py` for shared fixtures
+
+      2. Test Case Design
+         - One test class per module/class being tested
+         - Clear, descriptive test names
+         - Follow AAA pattern:
+           - Arrange (setup)
+           - Act (execute)
+           - Assert (verify)
+
+      3. Test Coverage
+         - Aim for minimum 80% code coverage
+         - Test both success and failure paths
+         - Test edge cases and boundary conditions
+         - Test public interfaces thoroughly
+
+      4. Fixtures and Mocks
+         - Use pytest fixtures for test setup
+         - Keep fixtures focused and minimal
+         - Use mocks for external dependencies
+         - Prefer monkeypatch over mock when possible
+
+      5. Assertions and Verification
+         - Use pytest's built-in assertions
+         - Write descriptive assertion messages
+         - Test for expected exceptions
+         - Verify mock calls when relevant
+
+      6. Test Isolation
+         - Tests should be independent
+         - Clean up resources after tests
+         - No dependencies between tests
+         - Use temporary files/directories
+
+examples:
+  - input: |
+      # Bad test
+      def test_something():
+          result = process_data()
+          assert result == True
+      
+      # Good test
+      import pytest
+      from mymodule import process_data
+      
+      class TestDataProcessor:
+          @pytest.fixture
+          def sample_data(self):
+              return {
+                  "input": "test",
+                  "expected": "TEST"
+              }
+          
+          def test_process_data_uppercase(self, sample_data):
+              # Arrange
+              input_data = sample_data["input"]
+              expected = sample_data["expected"]
+              
+              # Act
+              result = process_data(input_data)
+              
+              # Assert
+              assert result == expected, f"Expected {expected}, but got {result}"
+          
+          def test_process_data_invalid_input(self):
+              # Arrange/Act/Assert
+              with pytest.raises(ValueError, match="Input must be a string"):
+                  process_data(None)
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "testing", "pytest"]
+</rule> 

@@ -1,0 +1,139 @@
+---
+description: Standards for Python git workflow implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Git Workflow Standards
+
+<rule>
+name: python_git_workflow
+description: Standards for Git workflow in Python projects
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+  - type: file_path
+    pattern: "\.git/"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Git Workflow Guidelines
+
+      ### Branching Strategy
+      1. Main branches:
+         - `main` (or `master`): Production-ready code
+         - `develop`: Integration branch for features
+         - `release/*`: Preparation for releases
+
+      2. Supporting branches:
+         - `feature/*`: New features
+         - `bugfix/*`: Bug fixes
+         - `hotfix/*`: Urgent production fixes
+         - `docs/*`: Documentation updates
+
+      3. Branch naming conventions:
+         ```
+         feature/user-authentication
+         bugfix/login-validation
+         hotfix/security-vulnerability
+         docs/api-documentation
+         ```
+
+      ### Commit Messages
+      1. Format:
+         ```
+         <type>(<scope>): <subject>
+
+         <body>
+
+         <footer>
+         ```
+
+      2. Types:
+         - `feat`: New feature
+         - `fix`: Bug fix
+         - `docs`: Documentation changes
+         - `style`: Formatting changes
+         - `refactor`: Code refactoring
+         - `test`: Adding or modifying tests
+         - `chore`: Build process or auxiliary tool changes
+         - `perf`: Performance improvements
+
+      3. Examples:
+         ```
+         feat(auth): implement JWT authentication
+
+         - Add JWT token generation and validation
+         - Integrate with user service
+         - Update tests for new auth flow
+
+         Closes #123
+         ```
+
+      ### Pull Request Workflow
+      1. PR requirements:
+         - Clear description of changes
+         - Reference to related issues
+         - Tests for new functionality
+         - Documentation updates
+         - Passing CI/CD checks
+
+      2. Review process:
+         - Code review by at least one peer
+         - Address all review comments
+         - Final approval before merging
+         - Follow the project's style guide
+
+      ### Integration with CI/CD
+      1. Pre-commit hooks:
+         - Code formatting
+         - Linting
+         - Type checking
+         - Small unit tests
+
+      2. CI pipelines:
+         - Run on all branches and PRs
+         - Full test suite
+         - Code quality checks
+         - Security scanning
+
+      ### Version Tagging
+      1. Semantic versioning:
+         - Major.Minor.Patch
+         - Tag releases in git
+
+      2. Release notes:
+         - Generated from commit messages
+         - Categorized by type
+         - Highlight breaking changes
+
+      ### Related Guidelines
+      - For code organization, see @python-code-organization
+      - For CI/CD integration, see @python-cicd
+      - For code review practices, see @python-code-review
+
+examples:
+  - input: |
+      # Bad: Vague commit message
+      git commit -m "fix stuff"
+      
+      # Good: Structured commit message
+      git commit -m "fix(auth): resolve token validation error
+      
+      - Fix JWT token validation with proper signature checking
+      - Add expired token handling
+      - Improve error messages
+      
+      Closes #45"
+      
+      # Bad: Branch naming
+      git checkout -b fix-bug
+      
+      # Good: Branch naming
+      git checkout -b bugfix/login-validation
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "git", "workflow", "branching", "commit-messages"]
+</rule> 

@@ -1,0 +1,282 @@
+---
+description: Standards for Python machine learning implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Machine Learning Standards
+
+<rule>
+name: python_machine_learning
+description: Best practices for developing machine learning projects in Python
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Machine Learning Guidelines
+
+      ### Project Organization
+      1. ML project structure:
+         ```
+         project/
+         ├── data/
+         │   ├── raw/           # Original, immutable data
+         │   ├── processed/     # Cleaned, transformed data
+         │   ├── interim/       # Intermediate processing stages
+         │   └── external/      # Data from third party sources
+         ├── models/            # Trained model files
+         ├── notebooks/         # Exploratory Jupyter notebooks
+         ├── src/               # Source code
+         │   ├── data/          # Data processing scripts
+         │   ├── features/      # Feature engineering code
+         │   ├── models/        # Model training code
+         │   └── visualization/ # Visualization code
+         ├── tests/             # Unit tests
+         ├── configs/           # Configuration files
+         └── reports/           # Generated analysis as HTML, PDF, etc.
+         ```
+         - Separate code from data and notebooks
+         - Use consistent directory structure
+         - Maintain clear separation of concerns
+         - Document project organization
+         - Follow @python-code-organization guidelines
+
+      2. Reproducibility:
+         - Track random seeds
+         - Version all data
+         - Document all preprocessing steps
+         - Use configuration files for hyperparameters
+         - Create reproducible environments
+
+      ### Data Management
+      1. Data versioning:
+         - Use DVC (Data Version Control) or similar tools
+         - Maintain data provenance
+         - Document data sources and licenses
+         - Track data transformations
+         - Handle large files properly
+
+      2. Data preprocessing:
+         - Create reproducible pipelines
+         - Document all transformations
+         - Handle missing values consistently
+         - Address data leakage issues
+         - Validate data quality and integrity
+
+      3. Feature engineering:
+         - Document feature creation logic
+         - Test feature generation code
+         - Normalize/standardize appropriately
+         - Handle categorical variables properly
+         - Use feature selection techniques
+
+      ### Model Development
+      1. Experiment tracking:
+         - Use MLflow, Weights & Biases, or similar tools
+         - Log hyperparameters and metrics
+         - Track model versions
+         - Save model artifacts
+         - Document experiment context
+
+      2. Model implementation:
+         ```python
+         def train_model(X_train, y_train, config):
+             """Train a model with the given configuration.
+             
+             Args:
+                 X_train: Training features
+                 y_train: Training labels
+                 config: Model configuration dict
+                 
+             Returns:
+                 Trained model object
+             """
+             # Set random seeds for reproducibility
+             np.random.seed(config.get('random_seed', 42))
+             
+             # Initialize model with hyperparameters
+             model = get_model_class(config['model_type'])(
+                 **config['model_params']
+             )
+             
+             # Train model
+             model.fit(X_train, y_train)
+             
+             return model
+         ```
+
+      3. Model evaluation:
+         - Use cross-validation
+         - Implement multiple evaluation metrics
+         - Test on holdout sets
+         - Compare against baselines
+         - Analyze failure cases
+
+      4. Hyperparameter optimization:
+         - Use structured approaches (grid search, Bayesian optimization)
+         - Avoid data leakage during tuning
+         - Log all trials and results
+         - Balance computational costs
+         - Document final parameter choices
+
+      ### Production ML
+      1. Model serving:
+         - Standardize model interfaces
+         - Implement proper input validation
+         - Handle errors gracefully
+         - Design for scaling and performance
+         - Document API contracts
+
+      2. Monitoring:
+         - Track data drift
+         - Monitor model performance
+         - Set up alerts for degradation
+         - Log prediction inputs and outputs
+         - Implement monitoring dashboards
+
+      3. CI/CD for ML:
+         - Automate model testing
+         - Implement model validation pipelines
+         - Set quality gates for deployment
+         - Create rollback mechanisms
+         - Follow @python-cicd guidelines
+
+      ### ML-Specific Testing
+      1. Model tests:
+         - Test model creation
+         - Verify expected behavior on known inputs
+         - Test edge cases and failure modes
+         - Validate against historical models
+         - Implement integration tests
+
+      2. Data tests:
+         - Validate data schema and constraints
+         - Test data transformation pipeline
+         - Check for data leakage
+         - Verify feature distributions
+         - Implement data quality assertions
+
+      ### ML Ethics and Responsibility
+      1. Fairness and bias:
+         - Test for bias in data and models
+         - Implement fairness metrics
+         - Document limitations and constraints
+         - Audit model decisions
+         - Consider diverse stakeholders
+
+      2. Model interpretability:
+         - Use explainable AI techniques when possible
+         - Document model limitations
+         - Implement feature importance analysis
+         - Consider tradeoffs between performance and interpretability
+         - Document confidence levels appropriately
+
+      ### Related Guidelines
+      - For code organization, see @python-code-organization
+      - For testing practices, see @python-testing
+      - For CI/CD pipelines, see @python-cicd
+      - For logging, see @python-logging
+      - For performance, see @python-performance
+
+examples:
+  - input: |
+      # Bad: Unstructured ML code
+      import numpy as np
+      from sklearn.ensemble import RandomForestClassifier
+      
+      # Load data
+      data = np.load('data.npy')
+      X = data[:, :-1]
+      y = data[:, -1]
+      
+      # Train model
+      model = RandomForestClassifier(n_estimators=100)
+      model.fit(X, y)
+      
+      # Save model
+      import pickle
+      with open('model.pkl', 'wb') as f:
+          pickle.dump(model, f)
+      
+      # Good: Structured ML code
+      import numpy as np
+      import mlflow
+      from sklearn.ensemble import RandomForestClassifier
+      from sklearn.model_selection import train_test_split
+      from sklearn.metrics import accuracy_score, precision_score, recall_score
+      
+      # Configuration
+      config = {
+          'random_seed': 42,
+          'test_size': 0.2,
+          'model_params': {
+              'n_estimators': 100,
+              'max_depth': 10,
+              'min_samples_split': 5
+          }
+      }
+      
+      # Set reproducibility
+      np.random.seed(config['random_seed'])
+      
+      # Data loading with proper logging
+      def load_data(path):
+          logger.info(f"Loading data from {path}")
+          data = np.load(path)
+          return data[:, :-1], data[:, -1]
+      
+      # Model training with experiment tracking
+      def train_model(X_train, y_train, config):
+          with mlflow.start_run():
+              # Log parameters
+              for key, value in config['model_params'].items():
+                  mlflow.log_param(key, value)
+                  
+              # Train model
+              model = RandomForestClassifier(**config['model_params'])
+              model.fit(X_train, y_train)
+              
+              # Return trained model
+              return model
+      
+      # Model evaluation
+      def evaluate_model(model, X_test, y_test):
+          y_pred = model.predict(X_test)
+          
+          # Calculate metrics
+          metrics = {
+              'accuracy': accuracy_score(y_test, y_pred),
+              'precision': precision_score(y_test, y_pred, average='weighted'),
+              'recall': recall_score(y_test, y_pred, average='weighted')
+          }
+          
+          # Log metrics
+          for name, value in metrics.items():
+              mlflow.log_metric(name, value)
+              
+          return metrics
+      
+      # Main workflow
+      if __name__ == "__main__":
+          # Load and split data
+          X, y = load_data('data.npy')
+          X_train, X_test, y_train, y_test = train_test_split(
+              X, y, test_size=config['test_size'], random_state=config['random_seed']
+          )
+          
+          # Train model
+          model = train_model(X_train, y_train, config)
+          
+          # Evaluate model
+          metrics = evaluate_model(model, X_test, y_test)
+          
+          # Save model with MLflow
+          mlflow.sklearn.log_model(model, "model")
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "machine-learning", "ml", "ai", "data-science"]
+</rule> 

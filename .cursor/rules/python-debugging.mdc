@@ -1,0 +1,164 @@
+---
+description: Standards for Python debugging implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Debugging Standards
+
+<rule>
+name: python_debugging
+description: Standards for debugging Python applications and troubleshooting issues
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Debugging Best Practices
+
+      ### Debugging Tools
+      1. Built-in debugger (pdb):
+         ```python
+         import pdb
+
+         def complex_function(data):
+             pdb.set_trace()  # Breakpoint
+             result = process_data(data)
+             return result
+         ```
+
+      2. Modern debugging tools:
+         ```python
+         import ipdb  # Enhanced interactive debugger
+         import pudb  # Visual debugger
+         from icecream import ic  # Enhanced print debugging
+         ```
+
+      ### Debug Logging
+      1. Use appropriate log levels:
+         ```python
+         import logging
+
+         logger = logging.getLogger(__name__)
+         logger.setLevel(logging.DEBUG)
+
+         def process_data(data):
+             logger.debug(f"Processing data: {data}")
+             try:
+                 result = transform(data)
+                 logger.debug(f"Transformation result: {result}")
+                 return result
+             except Exception as e:
+                 logger.exception("Error processing data")
+                 raise
+         ```
+
+      2. Structured debug information:
+         ```python
+         logger.debug("Processing request", extra={
+             'request_id': req_id,
+             'payload': data,
+             'state': 'started'
+         })
+         ```
+
+      ### Troubleshooting Procedures
+      1. Exception handling with context:
+         ```python
+         try:
+             result = complex_operation()
+         except Exception as e:
+             logger.error(
+                 "Operation failed",
+                 exc_info=True,
+                 extra={
+                     'operation': 'complex_operation',
+                     'input_data': input_data,
+                     'state': current_state
+                 }
+             )
+             raise
+         ```
+
+      2. Debug decorators:
+         ```python
+         from functools import wraps
+         import time
+
+         def debug_function(func):
+             @wraps(func)
+             def wrapper(*args, **kwargs):
+                 logger.debug(f"Calling {func.__name__}")
+                 logger.debug(f"Args: {args}, Kwargs: {kwargs}")
+                 start_time = time.time()
+                 try:
+                     result = func(*args, **kwargs)
+                     logger.debug(f"Result: {result}")
+                     return result
+                 finally:
+                     end_time = time.time()
+                     logger.debug(f"Execution time: {end_time - start_time}s")
+             return wrapper
+         ```
+
+      ### Performance Profiling
+      1. Use profiling tools:
+         ```python
+         import cProfile
+         import pstats
+
+         def profile_function(func):
+             def wrapper(*args, **kwargs):
+                 profiler = cProfile.Profile()
+                 try:
+                     return profiler.runcall(func, *args, **kwargs)
+                 finally:
+                     stats = pstats.Stats(profiler)
+                     stats.sort_stats('cumulative')
+                     stats.print_stats()
+             return wrapper
+         ```
+
+      2. Memory profiling:
+         ```python
+         from memory_profiler import profile
+
+         @profile
+         def memory_intensive_function():
+             large_list = [i for i in range(1000000)]
+             return process_large_list(large_list)
+         ```
+
+      ### Best Practices
+      1. Use descriptive variable names during debugging
+      2. Add temporary debug prints with clear markers
+      3. Implement proper error handling
+      4. Use debugging breakpoints strategically
+      5. Profile performance bottlenecks
+      6. Document debugging procedures
+      7. Clean up debug code before committing
+
+examples:
+  - input: |
+      # Bad: Print debugging
+      print("here1")
+      result = process_data()
+      print("here2", result)
+
+      # Good: Structured debugging
+      logger = logging.getLogger(__name__)
+
+      @debug_function
+      def process_data(data):
+          logger.debug("Processing data", extra={'input': data})
+          result = transform(data)
+          logger.debug("Data processed", extra={'result': result})
+          return result
+    output: "Debugging follows best practices"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "debugging", "troubleshooting", "profiling"]
+</rule> 

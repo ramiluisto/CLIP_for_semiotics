@@ -1,0 +1,94 @@
+---
+description: Standards for Python performance implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Performance Standards
+
+<rule>
+name: python_performance
+description: Enforces Python performance best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Performance Guidelines
+
+      1. Data Structures
+         - Use appropriate data structures for operations
+         - Lists for sequence operations
+         - Sets for membership testing
+         - Dictionaries for key-value lookups
+         - Use collections module for specialized needs
+
+      2. Loops and Comprehensions
+         - Use list/dict/set comprehensions when appropriate
+         - Avoid nested loops when possible
+         - Use generator expressions for large sequences
+         - Break out of loops early when possible
+         - Use itertools for efficient iteration
+
+      3. Memory Management
+         - Use generators for large datasets
+         - Implement __slots__ for memory-intensive classes
+         - Clear references to large objects when done
+         - Use weakref for cyclic references
+         - Profile memory usage regularly
+
+      4. String Operations
+         - Use join() instead of + for string concatenation
+         - Use string formatting efficiently
+         - Consider using StringIO for complex string operations
+         - Use bytes for binary data
+
+      5. Computation Optimization
+         - Use local variables over globals
+         - Cache expensive computations
+         - Use functools.lru_cache for memoization
+         - Utilize multiprocessing for CPU-bound tasks
+         - Use asyncio for I/O-bound operations
+
+      6. Profiling and Monitoring
+         - Profile code before optimizing
+         - Use cProfile for detailed analysis
+         - Monitor memory usage with memory_profiler
+         - Set performance benchmarks
+         - Document performance requirements
+
+examples:
+  - input: |
+      # Bad performance
+      result = ""
+      for i in range(1000):
+          result += str(i)
+      
+      # Good performance
+      result = "".join(str(i) for i in range(1000))
+      
+      # Bad performance
+      def expensive_computation(n):
+          return sum(i * i for i in range(n))
+      
+      # Good performance
+      from functools import lru_cache
+      
+      @lru_cache(maxsize=128)
+      def expensive_computation(n):
+          return sum(i * i for i in range(n))
+      
+      # Memory efficient class
+      class Point:
+          __slots__ = ["x", "y"]
+          
+          def __init__(self, x, y):
+              self.x = x
+              self.y = y
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "performance", "optimization"]
+</rule> 

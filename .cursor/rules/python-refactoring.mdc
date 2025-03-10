@@ -1,0 +1,163 @@
+---
+description: Standards for Python refactoring implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Refactoring Standards
+
+<rule>
+name: python_refactoring
+description: Standards for refactoring Python code safely and effectively
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Refactoring Guidelines
+
+      ### Refactoring Principles
+      1. Maintain behavior:
+         - Ensure functionality remains unchanged
+         - Preserve all existing interfaces
+         - Keep backward compatibility when possible
+         - Validate behavior with tests before and after
+
+      2. Incremental approach:
+         - Make small, focused changes
+         - Commit frequently
+         - Test after each change
+         - Document refactoring steps
+
+      ### Code Smell Detection
+      1. Common Python code smells:
+         - Long functions (>50 lines)
+         - Deep nesting (>3 levels)
+         - Large classes (>300 lines)
+         - High cyclomatic complexity
+         - Duplicate code
+         - Global state
+         - Excessive comments explaining complex code
+
+      2. Detection tools:
+         - Use static analyzers (pylint, flake8)
+         - Monitor code metrics
+         - Perform regular code reviews
+         - Use @python-code-metrics tools
+
+      ### Refactoring Techniques
+      1. Function-level refactoring:
+         - Extract method/function
+         - Inline method/function
+         - Rename method/function
+         - Add/remove parameters
+         - Replace algorithm
+
+      2. Class-level refactoring:
+         - Extract class
+         - Move method
+         - Pull up/push down field or method
+         - Replace inheritance with composition
+         - Extract interface/abstract class
+
+      3. Module-level refactoring:
+         - Move functionality between modules
+         - Split module
+         - Convert module to package
+         - Reorganize imports
+
+      ### Testing During Refactoring
+      1. Test coverage:
+         - Ensure high test coverage before refactoring
+         - Add tests for uncovered code
+         - Use both unit and integration tests
+         - Follow @python-testing guidelines
+
+      2. Test-driven refactoring:
+         - Write tests for existing behavior
+         - Refactor while keeping tests passing
+         - Add tests for edge cases
+         - Use test doubles when appropriate
+
+      ### Refactoring Tools
+      1. IDE refactoring tools:
+         - Use automated rename/extract features
+         - Leverage code analysis tools
+         - Use preview features before applying changes
+         - Verify changes after automated refactoring
+
+      2. Version control:
+         - Create dedicated refactoring branches
+         - Use meaningful commit messages
+         - Follow @python-git-workflow guidelines
+         - Consider separate PRs for refactoring
+
+      ### Related Guidelines
+      - For testing practices, see @python-testing
+      - For code metrics, see @python-code-metrics
+      - For git workflow, see @python-git-workflow
+      - For code organization, see @python-code-organization
+
+examples:
+  - input: |
+      # Bad: Monolithic function
+      def process_data(data):
+          # 100 lines of code doing multiple things
+          pass
+      
+      # Good: Refactored into smaller functions
+      def process_data(data):
+          """Process the input data."""
+          validated_data = validate_data(data)
+          transformed_data = transform_data(validated_data)
+          return save_results(transformed_data)
+      
+      def validate_data(data):
+          """Validate input data format and content."""
+          # Focused validation logic
+          return validated_data
+      
+      def transform_data(validated_data):
+          """Transform the validated data."""
+          # Focused transformation logic
+          return transformed_data
+      
+      def save_results(transformed_data):
+          """Save the transformed data."""
+          # Focused saving logic
+          return result
+      
+      # Bad: Duplicated code
+      def process_users(users):
+          for user in users:
+              name = user.get('name', '')
+              if name and len(name) > 2:
+                  # Process valid name
+                  
+      def process_products(products):
+          for product in products:
+              name = product.get('name', '')
+              if name and len(name) > 2:
+                  # Process valid name
+      
+      # Good: Extracted common functionality
+      def is_valid_name(name):
+          """Check if a name is valid."""
+          return name and len(name) > 2
+      
+      def process_users(users):
+          for user in users:
+              if is_valid_name(user.get('name', '')):
+                  # Process valid name
+                  
+      def process_products(products):
+          for product in products:
+              if is_valid_name(product.get('name', '')):
+                  # Process valid name
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "refactoring", "code-quality", "maintenance"]
+</rule> 

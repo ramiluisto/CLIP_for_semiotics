@@ -1,0 +1,122 @@
+---
+description: Standards for Python api design implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python API Design Standards
+
+<rule>
+name: python_api_design
+description: Enforces Python API design best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python API Design Guidelines
+
+      1. Interface Design
+         - Keep interfaces minimal and focused
+         - Use consistent naming conventions
+         - Make APIs self-documenting
+         - Follow the principle of least surprise
+         - Design for extensibility
+
+      2. Function Design
+         - Use keyword arguments for clarity
+         - Provide sensible defaults
+         - Return consistent types
+         - Use type hints
+         - Document all parameters and return types
+
+      3. Class Design
+         - Follow SOLID principles
+         - Implement proper abstract base classes
+         - Use properties for computed attributes
+         - Implement proper comparison methods
+         - Design for inheritance when appropriate
+
+      4. Error Handling
+         - Define custom exceptions when needed
+         - Use descriptive error messages
+         - Provide recovery mechanisms
+         - Document error conditions
+         - Handle edge cases gracefully
+
+      5. Versioning
+         - Use semantic versioning
+         - Maintain backwards compatibility
+         - Deprecate features properly
+         - Document breaking changes
+         - Provide migration guides
+
+      6. API Documentation
+         - Use clear and concise docstrings
+         - Provide usage examples
+         - Document side effects
+         - Specify preconditions and postconditions
+         - Include performance characteristics
+
+examples:
+  - input: |
+      # Bad API design
+      def process(x, y, z):
+          return do_something(x, y, z)
+      
+      # Good API design
+      from typing import Optional, List, Dict
+      from abc import ABC, abstractmethod
+      
+      class DataProcessor(ABC):
+          """Abstract base class for data processing operations.
+          
+          Provides a standard interface for processing various types of data
+          with customizable validation and transformation options.
+          """
+          
+          @abstractmethod
+          def process(
+              self,
+              data: List[Dict[str, any]],
+              *,
+              validate: bool = True,
+              transform_options: Optional[Dict[str, any]] = None
+          ) -> Dict[str, List[any]]:
+              """Process the input data according to specified options.
+              
+              Args:
+                  data: List of dictionaries containing the input data.
+                  validate: Whether to validate input data before processing.
+                  transform_options: Optional configuration for data transformation.
+              
+              Returns:
+                  Processed data organized by category.
+              
+              Raises:
+                  ValidationError: If validate=True and data is invalid.
+                  ProcessingError: If processing fails.
+              
+              Example:
+                  >>> processor = MyDataProcessor()
+                  >>> result = processor.process(
+                  ...     data=[{"value": 1}, {"value": 2}],
+                  ...     transform_options={"scale": 2.0}
+                  ... )
+              """
+              raise NotImplementedError
+      
+      class ProcessingError(Exception):
+          """Raised when data processing fails."""
+          pass
+      
+      class ValidationError(Exception):
+          """Raised when data validation fails."""
+          pass
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "api-design", "interfaces"]
+</rule> 

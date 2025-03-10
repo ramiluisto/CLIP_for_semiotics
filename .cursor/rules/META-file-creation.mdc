@@ -1,0 +1,156 @@
+# Test
+
+# File Creation in Hidden Directories
+
+This rule documents the required process for creating ANY files that will reside in hidden directories.
+
+<rule>
+name: meta_file_creation
+description: Standards for creating files in hidden directories and cleaning up temporary files
+filters:
+  - type: file_location
+    pattern: "\\..+/"  # Matches paths that contain a hidden directory
+
+actions:
+  - type: suggest
+    message: |
+      ## ⚠️ File Creation in Hidden Directories
+
+      Due to system limitations, ANY files that will reside in hidden directories MUST be created via temporary files.
+      This applies to ALL file types (e.g., .mdc, .md, .txt, README files, etc.) and ALL hidden directories.
+
+      ### Required Steps
+
+      1. Create a temporary directory with a unique name:
+         ```bash
+         # Create temporary directory with descriptive name
+         mkdir -p temp_for_hidden_files
+         # Or for specific purposes
+         mkdir -p rules_temp
+         ```
+
+      2. Create the file in the temporary directory first:
+         ```bash
+         # Create with temporary extension
+         touch temp_for_hidden_files/your-file.tmp
+         # Or with final extension if no conflicts
+         touch temp_for_hidden_files/your-file.md
+         ```
+
+      3. Add your content to the file while it's in the temporary directory
+         - Verify the content exists using `cat` or similar
+         ```bash
+         # Always verify content
+         cat temp_for_hidden_files/your-file.tmp
+         ```
+
+      4. Move the file to its final location:
+         ```bash
+         # Move to final location
+         mv temp_for_hidden_files/your-file.tmp .hidden_dir/your-file.md
+         ```
+
+      5. Verify the content after moving:
+         ```bash
+         # Verify content preserved
+         cat .hidden_dir/your-file.md
+         ```
+
+      6. Clean up temporary files and directories:
+         ```bash
+         # Remove the specific temporary file (if move failed)
+         rm -f temp_for_hidden_files/your-file.tmp
+         
+         # Remove the temporary directory if empty
+         rmdir temp_for_hidden_files 2>/dev/null || echo "Directory not empty, manual cleanup required"
+         
+         # For batch operations, clean up after all files are moved
+         rm -rf temp_for_hidden_files  # Only if you're sure it's a temp dir!
+         ```
+
+      ### ⚠️ Critical Rules
+
+      1. NEVER create files directly in hidden directories
+      2. ALWAYS use a temporary directory (not just root)
+      3. ALWAYS verify file contents after creation
+      4. ALWAYS verify file contents after moving
+      5. NEVER skip the verification steps
+      6. NEVER create temporary files in project root
+      7. ALWAYS clean up temporary files and directories
+      8. VERIFY temporary directory contents before cleanup
+
+      ### Directory Structure
+
+      Use this structure for file creation:
+      ```
+      ./
+      ├── temp_for_hidden_files/  # Temporary directory (DELETE after use)
+      │   └── your-file.tmp      # Create files here first
+      └── .hidden_dir/           # Any hidden directory
+          └── your-file.md       # Final location
+      ```
+
+      For rule files specifically:
+      ```
+      ./
+      ├── rules_temp/           # Temporary directory (DELETE after use)
+      │   └── your-rule.txt    # Create files here first
+      └── .cursor/
+          └── rules/          # Move files here after creation
+              └── your-rule.mdc
+      ```
+
+examples:
+  - input: |
+      # Bad: Direct creation in hidden directory
+      touch .hidden_dir/file.txt
+      echo "content" > .hidden_dir/file.txt
+
+      # Bad: Creating temporary file in root
+      touch temp_file.txt
+      mv temp_file.txt .hidden_dir/file.txt
+
+      # Bad: No cleanup after operation
+      mkdir -p temp_for_hidden_files
+      echo "content" > temp_for_hidden_files/file.txt
+      mv temp_for_hidden_files/file.txt .hidden_dir/file.txt
+      # Left temp directory behind!
+
+      # Good: Complete process with cleanup
+      # 1. Create and verify
+      mkdir -p temp_for_hidden_files
+      touch temp_for_hidden_files/file.txt
+      echo "content" > temp_for_hidden_files/file.txt
+      cat temp_for_hidden_files/file.txt  # Verify
+      
+      # 2. Move and verify
+      mv temp_for_hidden_files/file.txt .hidden_dir/file.txt
+      cat .hidden_dir/file.txt  # Verify again
+      
+      # 3. Clean up
+      rm -f temp_for_hidden_files/file.txt  # Clean up any failed moves
+      rmdir temp_for_hidden_files  # Clean up directory
+
+      # Good: Batch process with cleanup
+      # 1. Create and verify multiple files
+      mkdir -p temp_for_hidden_files
+      echo "# Doc 1" > temp_for_hidden_files/README1.txt
+      echo "# Doc 2" > temp_for_hidden_files/README2.txt
+      cat temp_for_hidden_files/README1.txt  # Verify
+      cat temp_for_hidden_files/README2.txt  # Verify
+      
+      # 2. Move and verify all files
+      mv temp_for_hidden_files/README1.txt .hidden_dir1/README.md
+      mv temp_for_hidden_files/README2.txt .hidden_dir2/README.md
+      cat .hidden_dir1/README.md  # Verify
+      cat .hidden_dir2/README.md  # Verify
+      
+      # 3. Clean up everything
+      rm -rf temp_for_hidden_files  # Clean up after all files moved
+    output: "Files created successfully and temporary files cleaned up"
+
+metadata:
+  priority: critical
+  version: 1.2
+  tags: ["file-creation", "hidden-directories", "rules", "safety", "cleanup"]
+</rule>

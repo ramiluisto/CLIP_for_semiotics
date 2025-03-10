@@ -1,0 +1,96 @@
+---
+description: Standards for Python security implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Security Standards
+
+<rule>
+name: python_security
+description: Enforces Python security best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Security Guidelines
+
+      1. Input Validation
+         - Never trust user input
+         - Validate all input data
+         - Use type hints and runtime checking
+         - Sanitize data before processing
+         - Use input size limits
+
+      2. Secrets Management
+         - Never hardcode secrets
+         - Use environment variables or secure vaults
+         - Rotate secrets regularly
+         - Use secure random number generation
+         - Implement proper key management
+
+      3. File Operations
+         - Use secure file permissions
+         - Validate file paths
+         - Avoid directory traversal vulnerabilities
+         - Clean up temporary files
+         - Use secure file operations
+
+      4. Dependency Management
+         - Keep dependencies up to date
+         - Use dependency scanning tools
+         - Pin dependency versions
+         - Audit dependencies regularly
+         - Use virtual environments
+
+      5. Data Protection
+         - Use proper encryption for sensitive data
+         - Implement secure hashing
+         - Follow data protection regulations
+         - Implement proper access controls
+         - Secure data in transit and at rest
+
+      6. Code Security
+         - Avoid eval() and exec()
+         - Use subprocess.run with security flags
+         - Implement proper CORS policies
+         - Use secure defaults
+         - Implement rate limiting
+
+examples:
+  - input: |
+      # Bad security
+      password = "hardcoded_secret"
+      user_input = input()
+      eval(user_input)
+      
+      # Good security
+      import os
+      from typing import Optional
+      from cryptography.fernet import Fernet
+      
+      def get_secret(key: str) -> Optional[str]:
+          """Securely retrieve a secret from environment."""
+          return os.environ.get(key)
+      
+      def validate_input(data: str, max_length: int = 1000) -> str:
+          """Validate and sanitize user input."""
+          if not isinstance(data, str):
+              raise ValueError("Input must be a string")
+          if len(data) > max_length:
+              raise ValueError(f"Input exceeds maximum length of {max_length}")
+          return data.strip()
+      
+      def encrypt_data(data: str) -> bytes:
+          """Encrypt sensitive data."""
+          key = Fernet.generate_key()
+          f = Fernet(key)
+          return f.encrypt(data.encode())
+
+metadata:
+  priority: critical
+  version: 1.0
+  tags: ["python", "security", "best-practices"]
+</rule> 

@@ -1,0 +1,78 @@
+---
+description: Standards for Python formatting implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Code Formatting Standards
+
+<rule>
+name: python_formatting
+description: Enforces Python code formatting best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Code Formatting Guidelines
+
+      1. Line Length
+         - Maximum line length should be 88 characters (Black default)
+         - Exception: URLs and similar long strings
+
+      2. Indentation
+         - Use 4 spaces for indentation
+         - Never use tabs
+         - Align with opening delimiter for multiline constructs
+
+      3. Imports
+         - Group imports in this order:
+           1. Standard library imports
+           2. Related third party imports
+           3. Local application/library specific imports
+         - Separate groups with one blank line
+         - Use absolute imports over relative imports
+
+      4. Whitespace
+         - No trailing whitespace
+         - Two blank lines before top-level classes and functions
+         - One blank line before class methods
+         - Use spaces around operators and after commas
+
+      5. String Formatting
+         - Prefer f-strings for string formatting
+         - Use r-strings for regular expressions
+         - Use triple quotes for docstrings
+
+      6. Naming Conventions
+         - Classes: CapWords convention
+         - Functions/Variables: lowercase_with_underscores
+         - Constants: UPPERCASE_WITH_UNDERSCORES
+         - Protected instance attributes: _leading_underscore
+         - Private instance attributes: __double_leading_underscore
+
+examples:
+  - input: |
+      # Bad formatting
+      def my_function( x,y):
+          return x+y
+      
+      class myclass:
+          def __init__(self,name):
+              self.name=name
+      
+      # Good formatting
+      def my_function(x, y):
+          return x + y
+      
+      
+      class MyClass:
+          def __init__(self, name):
+              self.name = name
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "formatting", "style"]
+</rule>

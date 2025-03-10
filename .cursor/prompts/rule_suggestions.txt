@@ -1,0 +1,122 @@
+# Python Rule Suggestions
+
+After reviewing the existing Python rules in the .cursor/rules directory, here are some suggested topics that could be added to enhance the rule collection:
+
+## Development Workflow
+
+1. **python-git-workflow.mdc**
+   - Git branching strategies for Python projects
+   - Commit message conventions
+   - Pull request workflows
+   - Code review integration
+   - Release tagging
+
+2. **python-refactoring.mdc**
+   - Safe refactoring techniques
+   - Code smell identification
+   - Refactoring patterns for Python
+   - Testing during refactoring
+   - Incremental vs. big-bang refactoring
+
+## Architecture and Design
+
+3. **python-design-patterns.mdc**
+   - Common design patterns in Python
+   - Implementation guidelines
+   - When to use specific patterns
+   - Python-specific pattern adaptations
+   - Anti-patterns to avoid
+
+4. **python-microservices.mdc**
+   - Microservice architecture in Python
+   - Service communication patterns
+   - API gateway implementation
+   - Service discovery
+   - Containerization best practices
+
+## Data and Database
+
+5. **python-database-access.mdc**
+   - ORM best practices
+   - SQL query optimization
+   - Connection pooling
+   - Migration strategies
+   - Database security
+
+6. **python-data-processing.mdc**
+   - ETL patterns
+   - Batch vs. stream processing
+   - Data validation techniques
+   - Performance optimization for large datasets
+   - Memory management for data processing
+
+## Web Development
+
+7. **python-web-frameworks.mdc**
+   - Framework-specific best practices (Django, Flask, FastAPI)
+   - RESTful API design
+   - Authentication and authorization
+   - Request validation
+   - Response formatting
+
+8. **python-frontend-integration.mdc**
+   - API contracts
+   - JSON serialization/deserialization
+   - CORS handling
+   - Frontend-backend communication patterns
+   - API versioning
+
+## DevOps and Infrastructure
+
+9. **python-containerization.mdc**
+   - Docker best practices for Python
+   - Multi-stage builds
+   - Container optimization
+   - Docker Compose configurations
+   - Kubernetes deployment patterns
+
+10. **python-serverless.mdc**
+    - Serverless function design
+    - Cold start optimization
+    - State management
+    - Event-driven architecture
+    - Serverless deployment strategies
+
+## Specialized Areas
+
+11. **python-machine-learning.mdc**
+    - ML code organization
+    - Model versioning
+    - Experiment tracking
+    - Model deployment
+    - Testing ML models
+
+12. **python-async-web.mdc**
+    - Async web framework best practices
+    - WebSocket implementation
+    - Long-polling techniques
+    - Server-sent events
+    - Async database access
+
+13. **python-cli-applications.mdc**
+    - Command-line interface design
+    - Argument parsing
+    - Interactive CLI features
+    - Progress reporting
+    - CLI testing
+
+## Quality and Maintenance
+
+14. **python-code-metrics.mdc**
+    - Cyclomatic complexity
+    - Maintainability index
+    - Code duplication detection
+    - Technical debt tracking
+    - Quality gates
+
+15. **python-documentation-generation.mdc**
+    - API documentation tools
+    - Documentation as code
+    - Automated documentation workflows
+    - Documentation testing
+    - Documentation versioning 

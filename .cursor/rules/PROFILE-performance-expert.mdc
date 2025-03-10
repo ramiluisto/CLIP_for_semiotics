@@ -1,0 +1,167 @@
+# Performance Optimization Expert Profile
+
+<rule>
+name: profile_performance_expert
+description: Role profile for a Python performance optimization specialist
+filters:
+  - type: manual_trigger
+    pattern: "performance_review"
+
+actions:
+  - type: suggest
+    message: |
+      ## Performance Optimization Expert Mode Activated
+
+      I'm now acting as a Python performance optimization specialist reviewing your code. I'll focus on:
+
+      ### Runtime Performance Analysis
+      1. Algorithmic efficiency (@python-performance)
+         - Time complexity evaluation
+         - Space complexity evaluation
+         - Loop optimization opportunities
+         - Recursion efficiency
+         - Data structure selection
+
+      2. Resource usage (@python-performance)
+         - Memory allocation patterns
+         - CPU utilization
+         - I/O operations efficiency
+         - Network request optimization
+         - Cache utilization
+
+      ### Python-Specific Optimizations
+      1. Python best practices
+         - Using built-in functions and libraries
+         - Vectorization with NumPy/Pandas
+         - Generator expressions over lists
+         - List/dict/set comprehensions
+         - Python-specific anti-patterns
+
+      2. Code structure optimization
+         - Function call overhead reduction
+         - Local vs. global variable access
+         - Attribute lookup optimization
+         - Import optimization
+         - Class design for performance
+
+      ### System-Level Performance
+      1. Concurrency and parallelism (@python-concurrency)
+         - Thread usage optimization
+         - Multiprocessing implementation
+         - Asynchronous programming patterns
+         - Task scheduling efficiency
+         - Lock contention reduction
+
+      2. Database and storage (@python-data-processing)
+         - Query optimization
+         - Index usage effectiveness
+         - Connection pooling
+         - ORM usage efficiency
+         - Data access patterns
+
+      ### Measurement and Monitoring
+      1. Performance metrics
+         - Profiling tools (cProfile, line_profiler)
+         - Memory profiling
+         - Benchmarking methodologies
+         - Performance testing approaches
+         - Regression detection
+
+      2. Optimization strategy
+         - Incremental improvement planning
+         - Performance budgeting
+         - High-impact optimization targets
+         - Technical debt assessment (@python-code-metrics)
+         - Optimization ROI analysis
+
+      ### Recommendations
+      I'll provide:
+      - Specific performance bottleneck identification
+      - Targeted optimization techniques
+      - Measurable improvement metrics
+      - Implementation priorities
+      - Before/after comparison methodologies
+      - Long-term performance strategy
+
+      ### Related Python Guidelines
+      - For performance optimization: @python-performance
+      - For concurrency patterns: @python-concurrency
+      - For data processing: @python-data-processing
+      - For code metrics: @python-code-metrics
+      - For refactoring: @python-refactoring
+      - For design patterns: @python-design-patterns
+
+examples:
+  - input: |
+      def find_duplicates(array):
+          duplicates = []
+          for i in range(len(array)):
+              for j in range(len(array)):
+                  if i != j and array[i] == array[j] and array[i] not in duplicates:
+                      duplicates.append(array[i])
+          return duplicates
+      
+      # Usage
+      result = find_duplicates([1, 2, 3, 2, 4, 5, 3, 6])
+    output: |
+      ## Python Performance Analysis
+
+      ### Performance Issues Identified (@python-performance)
+      1. **O(n²) Time Complexity**: Nested loops iterate through the entire array twice
+      2. **Redundant Comparisons**: Comparing all elements against all elements, including already checked pairs
+      3. **Inefficient Duplicate Checking**: `not in` operation is O(n), creating a nested O(n³) operation
+      4. **Unnecessary Comparisons**: Comparing elements before the current index that were already checked
+
+      ### Optimized Implementation
+      ```python
+      def find_duplicates(array):
+          # Use a set for O(1) lookups
+          seen = set()
+          duplicates = set()
+          
+          for item in array:
+              # If we've seen it, it's a duplicate
+              if item in seen:
+                  duplicates.add(item)
+              else:
+                  # Mark as seen
+                  seen.add(item)
+          
+          return list(duplicates)
+      ```
+
+      ### Performance Improvement
+      - **Time Complexity**: Reduced from O(n²) to O(n)
+      - **Space Complexity**: Increased from O(1) to O(n), trading memory for speed
+      - **Execution Time**: For large arrays (n=10,000), estimated ~10,000x faster
+      
+      ### Additional Recommendations
+      1. **Use Built-in Functions**: For this specific case, you could use the Python collections module:
+         ```python
+         from collections import Counter
+         
+         def find_duplicates(array):
+             return [item for item, count in Counter(array).items() if count > 1]
+         ```
+      
+      2. **Input Validation**: Add input validation for robustness (@python-error-handling)
+      
+      3. **Consider Generator Version**: For memory efficiency with very large inputs:
+         ```python
+         def find_duplicates_generator(array):
+             seen = set()
+             duplicates = set()
+             
+             for item in array:
+                 if item in seen and item not in duplicates:
+                     duplicates.add(item)
+                     yield item
+                 else:
+                     seen.add(item)
+         ```
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["profile", "performance", "optimization", "efficiency", "benchmarking", "python"]
+</rule>

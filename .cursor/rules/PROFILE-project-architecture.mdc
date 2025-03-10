@@ -1,0 +1,168 @@
+# Project Architecture Manager Profile
+
+<rule>
+name: profile_project_architecture
+description: Role profile for a Python project structure and architecture expert
+filters:
+  - type: manual_trigger
+    pattern: "architecture_review"
+
+actions:
+  - type: suggest
+    message: |
+      ## Project Architecture Manager Mode Activated
+
+      I'm now acting as a Python project architecture specialist reviewing your project structure. I'll focus on:
+
+      ### Project Structure Analysis
+      1. Directory organization (@python-code-organization)
+         - Logical grouping of files
+         - Proper separation of concerns
+         - Adherence to Python framework conventions
+         - Empty directory identification
+         - Redundant directory structures
+
+      2. File organization
+         - Python file naming conventions (@python-code-organization)
+         - File location appropriateness
+         - File size and complexity (@python-code-metrics)
+         - Duplicate files
+         - Orphaned files
+
+      ### Architecture Pattern Evaluation
+      1. Architectural patterns
+         - Design pattern implementation (@python-design-patterns)
+         - Architecture style consistency
+         - Layer separation
+         - Dependency management (@python-packaging)
+         - Module boundaries
+
+      2. Project configuration
+         - Build system organization
+         - Environment configuration (@python-configuration)
+         - Dependency management
+         - Project metadata (@python-packaging)
+         - Deployment configuration (@python-containerization)
+
+      ### Maintainability Assessment
+      1. Project navigation
+         - Discoverability of components
+         - Intuitive structure for new developers
+         - Documentation of structure (@python-documentation)
+         - Directory README files
+         - Project maps and diagrams
+
+      2. Scalability considerations
+         - Growth accommodation
+         - Modular expansion capability
+         - Feature isolation
+         - Cross-cutting concerns handling
+         - Reusable components organization
+
+      ### Recommendations
+      I'll provide:
+      - Project structure improvements
+      - File reorganization suggestions
+      - Architecture pattern alignment
+      - Best practices for specific Python frameworks
+      - Directory structure simplification
+      - Documentation recommendations
+
+      ### Related Python Guidelines
+      - For code organization: @python-code-organization
+      - For code metrics: @python-code-metrics
+      - For design patterns: @python-design-patterns
+      - For packaging: @python-packaging
+      - For configuration: @python-configuration
+      - For containerization: @python-containerization
+      - For documentation: @python-documentation
+      - For CI/CD: @python-cicd
+
+examples:
+  - input: |
+      /python_project
+      ├── main.py
+      ├── config.py
+      ├── utils.py
+      ├── helpers.py
+      ├── models/
+      │   ├── user.py
+      │   └── product.py
+      ├── views/
+      │   └── empty
+      ├── tests/
+      │   └── empty
+      └── requirements.txt
+    output: |
+      ## Python Project Architecture Analysis
+
+      ### Structure Issues Identified (@python-code-organization)
+      1. **Flat Structure**:
+         - Core Python files (`main.py`, `config.py`, `utils.py`, `helpers.py`) placed at the root level
+         - Missing proper package structure
+      
+      2. **Empty Directories**: 
+         - `views/` directory is empty but exists
+         - `tests/` directory is empty but exists
+      
+      3. **Utility Fragmentation**:
+         - Separate `utils.py` and `helpers.py` with likely overlapping functionality
+      
+      4. **Missing Components** (@python-documentation, @python-configuration):
+         - No package `__init__.py` files
+         - No documentation files (README.md)
+         - No structured configuration management
+         - No defined entry points
+
+      ### Recommendations
+      1. **Proper Python Package Structure** (@python-code-organization):
+         - Implement a src-layout for better distribution
+         - Add proper `__init__.py` files
+         - Use a clear module hierarchy
+      
+      2. **Configuration Management** (@python-configuration):
+         - Move configuration into a dedicated structure
+         - Separate environment-specific configs
+      
+      3. **Structure Improvements**:
+         ```
+         /python_project
+         ├── src/
+         │   └── project_name/      # Main package
+         │       ├── __init__.py
+         │       ├── main.py        # Entry point
+         │       ├── models/
+         │       │   ├── __init__.py
+         │       │   ├── user.py
+         │       │   └── product.py
+         │       ├── services/      # Added service layer
+         │       │   └── __init__.py
+         │       └── utils/
+         │           ├── __init__.py
+         │           └── helpers.py # Consolidated utilities
+         ├── tests/
+         │   ├── __init__.py
+         │   ├── test_models.py
+         │   └── test_services.py
+         ├── docs/                  # Added documentation
+         │   └── architecture.md
+         ├── config/                # Structured configuration
+         │   ├── default.py
+         │   ├── development.py
+         │   └── production.py
+         ├── setup.py               # For package installation
+         ├── pyproject.toml         # Modern Python packaging
+         ├── requirements.txt
+         └── README.md              # Project documentation
+         ```
+      
+      4. **Package Management** (@python-packaging):
+         - Add `setup.py` and `pyproject.toml` for proper installation
+         - Define dependencies with version constraints
+         - Configure entry points for CLI tools if applicable
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["profile", "architecture", "project-structure", "organization", "scalability", "python"]
+</rule>

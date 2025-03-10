@@ -1,0 +1,100 @@
+---
+description: Standards for Python concurrency implementation
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# Python Concurrency Standards
+
+<rule>
+name: python_concurrency
+description: Enforces Python concurrency and parallelism best practices
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+
+actions:
+  - type: suggest
+    message: |
+      ## Python Concurrency Guidelines
+
+      1. Choosing Concurrency Models
+         - Use asyncio for I/O-bound tasks
+         - Use multiprocessing for CPU-bound tasks
+         - Use threading for I/O-bound tasks with blocking code
+         - Consider using concurrent.futures for simple parallelism
+         - Document concurrency model choices
+
+      2. Asyncio Best Practices
+         - Use async/await consistently
+         - Avoid mixing sync and async code
+         - Handle coroutine cancellation properly
+         - Use asyncio.gather for concurrent tasks
+         - Implement proper error handling in coroutines
+
+      3. Multiprocessing Guidelines
+         - Use Process pools for CPU-intensive tasks
+         - Handle process communication carefully
+         - Use proper serialization for shared data
+         - Implement proper process cleanup
+         - Consider using shared memory when appropriate
+
+      4. Thread Safety
+         - Use thread-safe data structures
+         - Implement proper locking mechanisms
+         - Minimize critical sections
+         - Avoid global state in threaded code
+         - Use thread-local storage when needed
+
+      5. Resource Management
+         - Implement proper cleanup in all execution paths
+         - Use context managers for resource handling
+         - Handle timeouts appropriately
+         - Monitor resource usage
+         - Implement graceful shutdown
+
+      6. Performance Considerations
+         - Profile concurrent code
+         - Monitor thread/process count
+         - Handle backpressure
+         - Implement proper load balancing
+         - Consider using connection/thread pools
+
+examples:
+  - input: |
+      # Bad concurrency
+      def process_data():
+          for item in items:
+              time.sleep(1)  # Blocking I/O
+              process_item(item)
+      
+      # Good concurrency (asyncio)
+      async def process_data():
+          async def process_item(item):
+              await asyncio.sleep(1)  # Non-blocking
+              return await async_process(item)
+          
+          tasks = [process_item(item) for item in items]
+          results = await asyncio.gather(*tasks, return_exceptions=True)
+          
+          for result in results:
+              if isinstance(result, Exception):
+                  logger.error(f"Processing failed: {result}")
+      
+      # Good concurrency (multiprocessing)
+      def cpu_intensive_task(data):
+          return complex_computation(data)
+      
+      def parallel_processing(items):
+          with ProcessPoolExecutor() as executor:
+              try:
+                  results = list(executor.map(cpu_intensive_task, items))
+              except Exception as e:
+                  logger.error(f"Parallel processing failed: {e}")
+                  raise
+          return results
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["python", "concurrency", "async", "multiprocessing"]
+</rule> 
