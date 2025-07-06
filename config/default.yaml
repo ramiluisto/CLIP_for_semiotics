@@ -1,0 +1,41 @@
+# Default configuration for CLIP for Humanists
+
+model:
+  name: "openai/clip-vit-base-patch32"
+  batch_size: 16
+  cache_embeddings: true
+  device: "auto"  # auto, cpu, cuda
+  precision: "float32"  # float32, float16
+
+processing:
+  max_image_size: 512
+  supported_formats: [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
+  normalize_coordinates: true
+  include_confidence: true
+
+visualization:
+  default_figsize: [12, 8]
+  dpi: 300
+  colormap: "viridis"
+  map_style: "OpenStreetMap"
+  thumbnail_size: 150
+
+# Spatial analysis settings
+spatial:
+  distance_threshold_km: 1.0
+  k_neighbors: 8
+  weight_type: "inverse_distance"  # inverse_distance, binary, k_nearest
+  significance_level: 0.05
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: null  # Set to file path for file logging
+
+# Cache settings
+cache:
+  embeddings_dir: "cache/embeddings"
+  results_dir: "cache/results"
+  max_size_mb: 1000  # Maximum cache size in MB
+  cleanup_threshold: 0.8  # Cleanup when cache reaches this fraction of max_size
