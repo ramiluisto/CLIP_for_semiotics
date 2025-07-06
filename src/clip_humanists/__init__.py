@@ -17,6 +17,18 @@ try:
 except ImportError:
     from .analysis.autocorrelation_simple import SimpleSpatialAutocorrelation as SpatialAutocorrelation
 
+# Import multimodal content analysis
+try:
+    from .analysis.multimodal_content import MultimodalContentAnalyzer
+except ImportError:
+    MultimodalContentAnalyzer = None
+
+# Import OpenAI Vision API (optional)
+try:
+    from .apis.openai_vision import OpenAIVisionAnalyzer
+except ImportError:
+    OpenAIVisionAnalyzer = None
+
 # Optional imports (may not be available yet)
 try:
     from .analysis.statistics import StatisticalAnalysis
@@ -38,6 +50,12 @@ __all__ = [
     "GPSExtractor", 
     "SpatialAutocorrelation",
 ]
+
+# Add multimodal components if available
+if MultimodalContentAnalyzer:
+    __all__.append("MultimodalContentAnalyzer")
+if OpenAIVisionAnalyzer:
+    __all__.append("OpenAIVisionAnalyzer")
 
 # Add optional components if available
 if StatisticalAnalysis:
