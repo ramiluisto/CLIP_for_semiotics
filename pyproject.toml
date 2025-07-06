@@ -1,0 +1,109 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clip-for-humanists"
+version = "2.0.0"
+description = "Advanced visual semiotic analysis using CLIP with spatial autocorrelation detection"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "CLIP for Humanists Project"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Sociology :: History",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "pillow>=10.0.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "folium>=0.14.0",
+    "geopy>=2.3.0",
+    "tqdm>=4.65.0",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.10.0",
+    "pyyaml>=6.0",
+    "colorlog>=6.7.0",
+]
+
+[project.optional-dependencies]
+full = [
+    "libpysal>=4.7.0",
+    "esda>=2.4.3", 
+    "pysal>=2.7.0",
+    "geopandas>=0.13.0",
+    "shapely>=2.0.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.4.0",
+]
+viz = [
+    "plotly>=5.15.0",
+    "bokeh>=3.2.0", 
+    "seaborn>=0.12.0",
+]
+
+[project.scripts]
+clip-humanists = "clip_humanists.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/clip-for-humanists/clip-for-humanists"
+Documentation = "https://clip-for-humanists.readthedocs.io"
+Repository = "https://github.com/clip-for-humanists/clip-for-humanists.git"
+Issues = "https://github.com/clip-for-humanists/clip-for-humanists/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+clip_humanists = ["config/*.yaml"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]

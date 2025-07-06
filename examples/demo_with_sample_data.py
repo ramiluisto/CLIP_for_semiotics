@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from clip_humanists.core.clip_analyzer import EnhancedCLIPAnalyzer, CLIPResult
 from clip_humanists.core.gps_extractor import GPSExtractor, GPSResult
@@ -84,7 +84,7 @@ def main():
     set_config(config)
     
     # Define paths and parameters
-    image_folder = Path(__file__).parent / "img"
+    image_folder = Path(__file__).parent.parent / "img"
     
     # Define text prompts for analysis
     text_prompts = [

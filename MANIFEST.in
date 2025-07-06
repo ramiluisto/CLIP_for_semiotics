@@ -1,0 +1,31 @@
+# Include configuration files
+include config/*.yaml
+include src/clip_humanists/config/*.yaml
+
+# Include documentation
+include README.md
+include CLAUDE.md
+include refactor_plan.md
+include SUMMARY_OF_REFACTOR.md
+
+# Include requirements
+include requirements.txt
+include pyproject.toml
+
+# Include examples and tests
+recursive-include examples *.py
+recursive-include tests *.py
+
+# Include sample images for testing
+recursive-include img *.jpg *.jpeg *.png
+
+# Include output directories structure
+include output/.gitkeep
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *~
+global-exclude .DS_Store
+global-exclude __pycache__
+prune .git

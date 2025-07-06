@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 def test_imports():
     """Test if all core modules can be imported."""
@@ -99,7 +99,7 @@ def test_gps_extractor():
         print("✓ GPS extractor initialized with location dictionary")
         
         # Test with sample image folder
-        img_folder = Path(__file__).parent / "img"
+        img_folder = Path(__file__).parent.parent / "img"
         if img_folder.exists():
             print(f"Testing with images in {img_folder}")
             results = gps_extractor.extract_from_folder(str(img_folder), show_progress=False)
