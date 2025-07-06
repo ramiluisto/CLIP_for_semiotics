@@ -84,3 +84,4 @@ dmypy.json
 EOF < /dev/null
 
 posters/
+data/
