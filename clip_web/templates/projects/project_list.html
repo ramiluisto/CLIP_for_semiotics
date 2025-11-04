@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}My Projects - CLIP for Humanists{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-folder"></i> My Projects</h1>
+        <p class="text-muted">Manage your research projects and collaborate with others</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'projects:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Project
+        </a>
+    </div>
+</div>
+
+<!-- Filter and Search Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text"
+                           class="form-control"
+                           name="search"
+                           value="{{ search }}"
+                           placeholder="Search projects by name, description, or tags...">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        Search
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="filter" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if filter == 'all' %}selected{% endif %}>
+                        All Projects ({{ total_count }})
+                    </option>
+                    <option value="owned" {% if filter == 'owned' %}selected{% endif %}>
+                        My Projects ({{ owned_count }})
+                    </option>
+                    <option value="shared" {% if filter == 'shared' %}selected{% endif %}>
+                        Shared with Me ({{ shared_count }})
+                    </option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Projects Grid -->
+{% if projects %}
+    <div class="row g-4 mb-4">
+        {% for project in projects %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">
+                            <a href="{% url 'projects:detail' project.slug %}" class="text-decoration-none">
+                                {{ project.name }}
+                            </a>
+                        </h5>
+                        {% if project.is_public %}
+                            <span class="badge bg-info">
+                                <i class="bi bi-globe"></i> Public
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if project.description %}
+                        <p class="card-text text-muted small">
+                            {{ project.description|truncatewords:20 }}
+                        </p>
+                    {% else %}
+                        <p class="card-text text-muted small fst-italic">
+                            No description provided
+                        </p>
+                    {% endif %}
+
+                    <!-- Project Statistics -->
+                    <div class="row text-center mt-3 mb-2">
+                        <div class="col-6">
+                            <div class="text-primary">
+                                <i class="bi bi-images"></i>
+                                <strong>{{ project.dataset_count|default:0 }}</strong>
+                            </div>
+                            <small class="text-muted">Datasets</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-success">
+                                <i class="bi bi-graph-up"></i>
+                                <strong>{{ project.analysis_count|default:0 }}</strong>
+                            </div>
+                            <small class="text-muted">Analyses</small>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    {% if project.tags %}
+                        <div class="mb-2">
+                            {% for tag in project.tags|slice:":3" %}
+                                <span class="badge bg-secondary">{{ tag }}</span>
+                            {% endfor %}
+                            {% if project.tags|length > 3 %}
+                                <span class="badge bg-secondary">+{{ project.tags|length|add:"-3" }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Owner Info -->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            {% if project.owner == user %}
+                                <i class="bi bi-person-fill text-primary"></i> You
+                            {% else %}
+                                <i class="bi bi-person"></i> {{ project.owner.get_full_name|default:project.owner.email }}
+                            {% endif %}
+                            <span class="float-end">
+                                {{ project.updated_at|timesince }} ago
+                            </span>
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'projects:detail' project.slug %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        {% if project.owner == user %}
+                            <div>
+                                <a href="{% url 'projects:update' project.slug %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <a href="{% url 'projects:collaborators' project.slug %}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-people"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Project pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if filter %}&filter={{ filter }}{% endif %}">
+                            First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if filter %}&filter={{ filter }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if filter %}&filter={{ filter }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if filter %}&filter={{ filter }}{% endif %}">
+                            Last
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-folder-x text-muted" style="font-size: 4rem;"></i>
+        <h3 class="mt-3">No Projects Found</h3>
+        {% if search %}
+            <p class="text-muted">
+                No projects match your search for "{{ search }}".
+                <a href="{% url 'projects:list' %}">Clear search</a>
+            </p>
+        {% else %}
+            <p class="text-muted">Create your first project to get started!</p>
+            <a href="{% url 'projects:create' %}" class="btn btn-primary btn-lg mt-2">
+                <i class="bi bi-plus-circle"></i> Create Project
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - CLIP for Humanists{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item active">{{ project.name }}</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-folder-fill text-primary"></i> {{ project.name }}
+            {% if project.is_public %}
+                <span class="badge bg-info">Public</span>
+            {% endif %}
+        </h1>
+        {% if project.description %}
+            <p class="lead text-muted">{{ project.description }}</p>
+        {% endif %}
+    </div>
+    <div class="col-md-4 text-end">
+        {% if can_edit %}
+            <div class="btn-group">
+                <a href="{% url 'projects:update' project.slug %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'projects:collaborators' project.slug %}" class="btn btn-outline-info">
+                    <i class="bi bi-people"></i> Collaborators
+                </a>
+            </div>
+        {% endif %}
+        {% if can_delete %}
+            <a href="{% url 'projects:delete' project.slug %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Project Metadata -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <h4 class="text-primary mb-0">{{ project.datasets.count }}</h4>
+                <small class="text-muted">Datasets</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <h4 class="text-success mb-0">{{ project.analyses.count }}</h4>
+                <small class="text-muted">Analyses</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <h4 class="text-info mb-0">{{ total_images }}</h4>
+                <small class="text-muted">Images</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <h4 class="text-warning mb-0">{{ project.memberships.count }}</h4>
+                <small class="text-muted">Collaborators</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent">
+        <div class="row text-muted small">
+            <div class="col-md-6">
+                <i class="bi bi-person"></i> Owner: <strong>{{ project.owner.get_full_name|default:project.owner.email }}</strong>
+                {% if not is_owner %}
+                    <span class="badge bg-secondary">Your role: {{ user_role }}</span>
+                {% endif %}
+            </div>
+            <div class="col-md-6 text-end">
+                <i class="bi bi-clock"></i> Updated {{ project.updated_at|timesince }} ago
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tags -->
+{% if project.tags %}
+<div class="mb-4">
+    <h5>Tags</h5>
+    {% for tag in project.tags %}
+        <span class="badge bg-secondary">{{ tag }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-4" id="projectTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="datasets-tab" data-bs-toggle="tab" data-bs-target="#datasets" type="button">
+            <i class="bi bi-images"></i> Datasets ({{ project.datasets.count }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="analyses-tab" data-bs-toggle="tab" data-bs-target="#analyses" type="button">
+            <i class="bi bi-graph-up"></i> Analyses ({{ project.analyses.count }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button">
+            <i class="bi bi-clock-history"></i> Recent Activity
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="projectTabsContent">
+    <!-- Datasets Tab -->
+    <div class="tab-pane fade show active" id="datasets" role="tabpanel">
+        {% if project.datasets.all %}
+            <div class="row g-3 mb-3">
+                {% for dataset in project.datasets.all %}
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-folder2"></i> {{ dataset.name }}
+                            </h5>
+                            {% if dataset.description %}
+                                <p class="card-text text-muted small">{{ dataset.description|truncatewords:15 }}</p>
+                            {% endif %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <i class="bi bi-images"></i> {{ dataset.image_count }} images
+                                </span>
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    View Dataset
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                Created {{ dataset.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-images text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No Datasets Yet</h4>
+                <p class="text-muted">Add image datasets to start analyzing your visual data.</p>
+                {% if can_edit %}
+                    <button class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> Add Dataset
+                    </button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Analyses Tab -->
+    <div class="tab-pane fade" id="analyses" role="tabpanel">
+        {% if project.analyses.all %}
+            <div class="list-group">
+                {% for analysis in project.analyses.all %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">
+                                <a href="#" class="text-decoration-none">
+                                    {{ analysis.name }}
+                                </a>
+                            </h5>
+                            <p class="mb-1 text-muted small">
+                                Dataset: <strong>{{ analysis.dataset.name }}</strong>
+                            </p>
+                            <div class="mt-2">
+                                {% if analysis.status == 'completed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Completed
+                                    </span>
+                                {% elif analysis.status == 'processing' %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-hourglass-split"></i> Processing
+                                    </span>
+                                {% elif analysis.status == 'failed' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Failed
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        {{ analysis.status }}
+                                    </span>
+                                {% endif %}
+                                <span class="text-muted small ms-2">
+                                    <i class="bi bi-bar-chart"></i> {{ analysis.result_count }} results
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                View Results
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Created {{ analysis.created_at|timesince }} ago
+                            by {{ analysis.created_by.get_full_name|default:analysis.created_by.email }}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-graph-up text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No Analyses Yet</h4>
+                <p class="text-muted">Create an analysis to start exploring your image data with CLIP.</p>
+                {% if can_edit %}
+                    <a href="{% url 'analysis:create' %}" class="btn btn-success mt-2">
+                        <i class="bi bi-plus-circle"></i> Create Analysis
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Activity Tab -->
+    <div class="tab-pane fade" id="activity" role="tabpanel">
+        {% if recent_analyses %}
+            <div class="list-group">
+                {% for analysis in recent_analyses %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">
+                            <i class="bi bi-graph-up text-success"></i>
+                            Analysis created: <strong>{{ analysis.name }}</strong>
+                        </h6>
+                        <small class="text-muted">{{ analysis.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="mb-1 small text-muted">
+                        by {{ analysis.created_by.get_full_name|default:analysis.created_by.email }}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-clock-history text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No Recent Activity</h4>
+                <p class="text-muted">Activity will appear here as you work on this project.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
