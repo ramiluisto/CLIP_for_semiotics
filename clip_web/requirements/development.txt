@@ -1,0 +1,26 @@
+-r base.txt
+
+# Development tools
+django-debug-toolbar==4.2.0
+django-extensions==3.2.3
+ipython==8.18.1
+ipdb==0.13.13
+
+# Code quality
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+pylint==3.0.2
+pylint-django==2.5.5
+
+# Testing (also used in development)
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+pytest-xdist==3.5.0
+factory-boy==3.3.0
+Faker==20.1.0
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
