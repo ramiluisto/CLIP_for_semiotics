@@ -1,30 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLIP for Humanists</title>
-</head>
-<body>
-    <h1>CLIP for Humanists - Django Web Application</h1>
-    <p>Welcome to the Django web version of CLIP for Humanists!</p>
-    <p><strong>Status:</strong> Phase 1 Implementation Complete</p>
+{% extends 'base.html' %}
 
-    <h2>Available Resources:</h2>
-    <ul>
-        <li><a href="/admin/">Django Admin</a></li>
-        <li><a href="/api/docs/">API Documentation (Swagger)</a></li>
-        <li><a href="/api/redoc/">API Documentation (ReDoc)</a></li>
-    </ul>
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="text-center mb-5">
+            <h1 class="display-4">
+                <i class="bi bi-images text-primary"></i>
+                CLIP for Humanists
+            </h1>
+            <p class="lead text-muted">
+                Visual Semiotical Analysis Using AI
+            </p>
+        </div>
 
-    <h2>Next Steps:</h2>
-    <p>The backend infrastructure is ready. Phase 2 will implement the web interface for:</p>
-    <ul>
-        <li>User registration and login</li>
-        <li>Project management</li>
-        <li>Image upload</li>
-        <li>Analysis creation and monitoring</li>
-        <li>Results visualization</li>
-    </ul>
-</body>
-</html>
+        {% if user.is_authenticated %}
+            <!-- Authenticated User Dashboard -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-folder text-primary" style="font-size: 3rem;"></i>
+                            <h3 class="mt-3">Projects</h3>
+                            <p class="text-muted">Create and manage your research projects</p>
+                            <a href="{% url 'projects:list' %}" class="btn btn-primary">
+                                View Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up text-success" style="font-size: 3rem;"></i>
+                            <h3 class="mt-3">New Analysis</h3>
+                            <p class="text-muted">Start analyzing images with CLIP</p>
+                            <a href="{% url 'analysis:create' %}" class="btn btn-success">
+                                Create Analysis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h4>Quick Stats</h4>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h2 class="text-primary">{{ project_count|default:0 }}</h2>
+                            <p class="text-muted">Projects</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h2 class="text-success">{{ analysis_count|default:0 }}</h2>
+                            <p class="text-muted">Analyses</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h2 class="text-info">{{ image_count|default:0 }}</h2>
+                            <p class="text-muted">Images</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Public Landing Page -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2>What is CLIP for Humanists?</h2>
+                    <p class="lead">
+                        A tool to aid the discovery process of visual semiotical analysis and geosemiotical
+                        analysis using CLIP (Contrastive Language-Image Pre-training).
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <i class="bi bi-search text-primary" style="font-size: 2rem;"></i>
+                            <h4 class="mt-3">Semantic Search</h4>
+                            <p>Search your images using natural language queries</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <i class="bi bi-geo-alt text-success" style="font-size: 2rem;"></i>
+                            <h4 class="mt-3">GPS Analysis</h4>
+                            <p>Extract and analyze geographical data from images</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <i class="bi bi-bar-chart text-info" style="font-size: 2rem;"></i>
+                            <h4 class="mt-3">Visualizations</h4>
+                            <p>Create publication-ready charts and maps</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg me-2">
+                    <i class="bi bi-person-plus"></i> Get Started
+                </a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+            </div>
+
+            <div class="card mt-4 bg-light">
+                <div class="card-body">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="{% url 'api:swagger-ui' %}">API Documentation</a></li>
+                        <li><a href="https://github.com/ramiluisto/CLIP_for_semiotics">GitHub Repository</a></li>
+                        <li><a href="/static/docs/">User Guide</a></li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="alert alert-info mt-4">
+            <h5><i class="bi bi-info-circle"></i> Phase 2 Development</h5>
+            <p class="mb-0">
+                <strong>Status:</strong> Core API infrastructure complete. Web interface in progress.
+                <br><strong>Current Features:</strong> REST API for all models, authentication, project management.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
