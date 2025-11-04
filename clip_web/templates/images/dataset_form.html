@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Dataset - CLIP for Humanists{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'images:dataset_list' project.slug %}">Datasets</a></li>
+                {% if object %}
+                    <li class="breadcrumb-item"><a href="{% url 'images:dataset_detail' project.slug object.id %}">{{ object.name }}</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                {% else %}
+                    <li class="breadcrumb-item active">Create</li>
+                {% endif %}
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %}"></i>
+                    {% if object %}Edit Dataset{% else %}Create New Dataset{% endif %}
+                </h2>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label for="id_name" class="form-label">
+                            Dataset Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                               id="id_name"
+                               name="name"
+                               value="{{ form.name.value|default:'' }}"
+                               required
+                               maxlength="255">
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            A descriptive name for this image collection
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_description" class="form-label">
+                            Description
+                        </label>
+                        <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                  id="id_description"
+                                  name="description"
+                                  rows="5">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.description.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Describe the source, context, or purpose of these images
+                        </small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% if object %}{% url 'images:dataset_detail' project.slug object.id %}{% else %}{% url 'images:dataset_list' project.slug %}{% endif %}"
+                           class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-{% if object %}check-circle{% else %}plus-circle{% endif %}"></i>
+                            {% if object %}Save Changes{% else %}Create Dataset{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if not object %}
+        <div class="card mt-3 bg-light">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> Next Steps</h5>
+                <p class="mb-0">
+                    After creating the dataset, you'll be able to:
+                </p>
+                <ul>
+                    <li>Upload multiple images at once</li>
+                    <li>Automatically extract EXIF and GPS metadata</li>
+                    <li>Create CLIP analyses on the image collection</li>
+                    <li>Generate visualizations and export results</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    textarea {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    textarea:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ dataset.name }} - CLIP for Humanists{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'images:dataset_list' project.slug %}">Datasets</a></li>
+                <li class="breadcrumb-item active">{{ dataset.name }}</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-folder2-open text-primary"></i> {{ dataset.name }}</h1>
+        {% if dataset.description %}
+            <p class="lead text-muted">{{ dataset.description }}</p>
+        {% endif %}
+    </div>
+    <div class="col-md-4 text-end">
+        {% if can_edit %}
+            <div class="btn-group">
+                <a href="{% url 'images:image_upload' project.slug dataset.id %}" class="btn btn-success">
+                    <i class="bi bi-upload"></i> Upload Images
+                </a>
+                <a href="{% url 'images:dataset_update' project.slug dataset.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'images:dataset_delete' project.slug dataset.id %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Dataset Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-images text-primary" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ total_images }}</h3>
+                <small class="text-muted">Total Images</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-geo-alt text-success" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ images_with_gps }}</h3>
+                <small class="text-muted">With GPS Data</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-hdd text-info" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ total_size|filesizeformat }}</h3>
+                <small class="text-muted">Total Size</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-person text-warning" style="font-size: 2rem;"></i>
+                <h6 class="mt-2 mb-0">{{ dataset.created_by.get_full_name|default:dataset.created_by.username }}</h6>
+                <small class="text-muted">Created by</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Images Grid -->
+{% if images %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="bi bi-images"></i> Images ({{ total_images }})</h4>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary active" id="gridView">
+                <i class="bi bi-grid-3x3"></i> Grid
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="listView">
+                <i class="bi bi-list"></i> List
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3" id="imagesGrid">
+        {% for image in images %}
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 image-card">
+                <div class="position-relative">
+                    <img src="{{ image.file.url }}"
+                         class="card-img-top"
+                         alt="{{ image.original_filename }}"
+                         style="height: 200px; object-fit: cover; cursor: pointer;"
+                         data-bs-toggle="modal"
+                         data-bs-target="#imageModal{{ image.id }}">
+
+                    {% if image.metadata.has_gps %}
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-success">
+                            <i class="bi bi-geo-alt-fill"></i> GPS
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-2">
+                    <small class="text-muted d-block text-truncate" title="{{ image.original_filename }}">
+                        {{ image.original_filename }}
+                    </small>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <small class="text-muted">
+                            {{ image.width }}×{{ image.height }}
+                        </small>
+                        <small class="text-muted">
+                            {{ image.file_size|filesizeformat }}
+                        </small>
+                    </div>
+                </div>
+                {% if can_edit %}
+                <div class="card-footer bg-transparent p-2">
+                    <form method="post" action="{% url 'images:image_delete' project.slug dataset.id image.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger w-100"
+                                onclick="return confirm('Delete this image?')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Image Modal -->
+        <div class="modal fade" id="imageModal{{ image.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ image.original_filename }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="{{ image.file.url }}"
+                             class="img-fluid"
+                             alt="{{ image.original_filename }}">
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row w-100">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <strong>Dimensions:</strong> {{ image.width }}×{{ image.height }}<br>
+                                    <strong>Format:</strong> {{ image.format }}<br>
+                                    <strong>Size:</strong> {{ image.file_size|filesizeformat }}<br>
+                                    <strong>Uploaded:</strong> {{ image.uploaded_at|date:"Y-m-d H:i" }}
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                {% if image.metadata %}
+                                    <small class="text-muted">
+                                        {% if image.metadata.camera_make %}
+                                            <strong>Camera:</strong> {{ image.metadata.camera_make }} {{ image.metadata.camera_model }}<br>
+                                        {% endif %}
+                                        {% if image.metadata.date_taken %}
+                                            <strong>Date Taken:</strong> {{ image.metadata.date_taken|date:"Y-m-d H:i" }}<br>
+                                        {% endif %}
+                                        {% if image.gps_data %}
+                                            <strong>Location:</strong> {{ image.gps_data.latitude }}, {{ image.gps_data.longitude }}<br>
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if images.has_other_pages %}
+        <nav aria-label="Image pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if images.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ images.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ images.number }} of {{ images.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if images.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ images.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ images.paginator.num_pages }}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+        <h3 class="mt-4">No Images Yet</h3>
+        <p class="text-muted">Upload images to start analyzing your visual data.</p>
+        {% if can_edit %}
+            <a href="{% url 'images:image_upload' project.slug dataset.id %}" class="btn btn-success btn-lg mt-2">
+                <i class="bi bi-upload"></i> Upload Images
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<style>
+.image-card {
+    transition: transform 0.2s;
+}
+.image-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const imagesGrid = document.getElementById('imagesGrid');
+
+    if (listView && gridView) {
+        listView.addEventListener('click', function() {
+            imagesGrid.classList.remove('row', 'g-3');
+            imagesGrid.classList.add('list-group');
+            gridView.classList.remove('active');
+            listView.classList.add('active');
+        });
+
+        gridView.addEventListener('click', function() {
+            imagesGrid.classList.remove('list-group');
+            imagesGrid.classList.add('row', 'g-3');
+            listView.classList.remove('active');
+            gridView.classList.add('active');
+        });
+    }
+});
+</script>
+{% endblock %}

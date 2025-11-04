@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Images - {{ dataset.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'images:dataset_list' project.slug %}">Datasets</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'images:dataset_detail' project.slug dataset.id %}">{{ dataset.name }}</a></li>
+                <li class="breadcrumb-item active">Upload Images</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="bi bi-cloud-upload"></i> Upload Images</h2>
+                <p class="text-muted mb-0">Add images to {{ dataset.name }}</p>
+            </div>
+            <a href="{% url 'images:dataset_detail' project.slug dataset.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dataset
+            </a>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div id="dropZone" class="border-2 border-dashed rounded p-5 text-center">
+                    <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">Drag & Drop Images Here</h4>
+                    <p class="text-muted">or</p>
+                    <label for="fileInput" class="btn btn-primary btn-lg">
+                        <i class="bi bi-folder2-open"></i> Browse Files
+                    </label>
+                    <input type="file"
+                           id="fileInput"
+                           multiple
+                           accept="image/jpeg,image/jpg,image/png"
+                           style="display: none;">
+                    <p class="text-muted mt-3 mb-0">
+                        <small>
+                            Supported formats: JPEG, JPG, PNG<br>
+                            Maximum file size: 10MB per image<br>
+                            You can upload multiple images at once
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div id="uploadProgress" class="card mb-4" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-hourglass-split"></i> Uploading Images
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-2" style="height: 30px;">
+                    <div id="progressBar"
+                         class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar"
+                         style="width: 0%">0%</div>
+                </div>
+                <p id="uploadStatus" class="text-muted mb-0">
+                    <span id="uploadedCount">0</span> of <span id="totalCount">0</span> images uploaded
+                </p>
+            </div>
+        </div>
+
+        <!-- Upload Queue -->
+        <div id="uploadQueue" class="card" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i> Upload Queue
+                </h5>
+            </div>
+            <div class="card-body" id="queueList">
+                <!-- Queue items will be added here -->
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="alert alert-success" style="display: none;">
+            <h5><i class="bi bi-check-circle"></i> Upload Complete!</h5>
+            <p class="mb-2">
+                <strong><span id="successCount">0</span></strong> images uploaded successfully.
+            </p>
+            <div class="mt-3">
+                <a href="{% url 'images:dataset_detail' project.slug dataset.id %}" class="btn btn-success">
+                    <i class="bi bi-eye"></i> View Dataset
+                </a>
+                <button class="btn btn-primary" onclick="resetUpload()">
+                    <i class="bi bi-plus-circle"></i> Upload More
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="alert alert-danger" style="display: none;">
+            <h5><i class="bi bi-exclamation-triangle"></i> Upload Errors</h5>
+            <div id="errorList"></div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> Automatic Metadata Extraction</h5>
+                <p class="mb-0">
+                    When you upload images, we automatically extract:
+                </p>
+                <ul>
+                    <li><strong>EXIF Data:</strong> Camera model, settings, and capture date/time</li>
+                    <li><strong>GPS Coordinates:</strong> Location data for mapping and geospatial analysis</li>
+                    <li><strong>Image Properties:</strong> Dimensions, format, and file size</li>
+                </ul>
+                <p class="mb-0">
+                    <small class="text-muted">
+                        This metadata is used for organizing, searching, and analyzing your images.
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#dropZone {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+    transition: all 0.3s;
+}
+
+#dropZone.dragover {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+    transform: scale(1.02);
+}
+
+.queue-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.queue-item.success {
+    border-color: #198754;
+    background-color: #d1e7dd;
+}
+
+.queue-item.error {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+</style>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const uploadProgress = document.getElementById('uploadProgress');
+const uploadQueue = document.getElementById('uploadQueue');
+const queueList = document.getElementById('queueList');
+const progressBar = document.getElementById('progressBar');
+const successMessage = document.getElementById('successMessage');
+const errorMessage = document.getElementById('errorMessage');
+const errorList = document.getElementById('errorList');
+
+let filesToUpload = [];
+let uploadedCount = 0;
+let totalCount = 0;
+
+// Drag and drop handlers
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => {
+        dropZone.classList.add('dragover');
+    }, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => {
+        dropZone.classList.remove('dragover');
+    }, false);
+});
+
+dropZone.addEventListener('drop', handleDrop, false);
+fileInput.addEventListener('change', handleFiles, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFileList(files);
+}
+
+function handleFiles(e) {
+    const files = e.target.files;
+    handleFileList(files);
+}
+
+function handleFileList(files) {
+    filesToUpload = Array.from(files).filter(file => {
+        // Validate file type
+        if (!file.type.match('image/(jpeg|jpg|png)')) {
+            showError(`${file.name}: Invalid file type. Only JPEG and PNG are supported.`);
+            return false;
+        }
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showError(`${file.name}: File too large. Maximum size is 10MB.`);
+            return false;
+        }
+        return true;
+    });
+
+    if (filesToUpload.length > 0) {
+        displayQueue();
+        uploadFiles();
+    }
+}
+
+function displayQueue() {
+    uploadQueue.style.display = 'block';
+    queueList.innerHTML = '';
+
+    filesToUpload.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'queue-item';
+        item.id = `queue-item-${index}`;
+        item.innerHTML = `
+            <div>
+                <i class="bi bi-image"></i>
+                <strong>${file.name}</strong>
+                <small class="text-muted">(${formatFileSize(file.size)})</small>
+            </div>
+            <div>
+                <span class="badge bg-secondary">Pending</span>
+            </div>
+        `;
+        queueList.appendChild(item);
+    });
+}
+
+function uploadFiles() {
+    uploadProgress.style.display = 'block';
+    totalCount = filesToUpload.length;
+    uploadedCount = 0;
+
+    document.getElementById('totalCount').textContent = totalCount;
+
+    // Upload files one by one
+    uploadNextFile();
+}
+
+function uploadNextFile() {
+    if (uploadedCount >= totalCount) {
+        // All done
+        onUploadComplete();
+        return;
+    }
+
+    const file = filesToUpload[uploadedCount];
+    const formData = new FormData();
+    formData.append('files', file);
+
+    const queueItem = document.getElementById(`queue-item-${uploadedCount}`);
+    queueItem.querySelector('.badge').className = 'badge bg-warning';
+    queueItem.querySelector('.badge').textContent = 'Uploading...';
+
+    fetch('{% url "images:image_upload" project.slug dataset.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            queueItem.classList.add('success');
+            queueItem.querySelector('.badge').className = 'badge bg-success';
+            queueItem.querySelector('.badge').innerHTML = '<i class="bi bi-check-circle"></i> Success';
+        } else {
+            throw new Error(data.error || 'Upload failed');
+        }
+    })
+    .catch(error => {
+        queueItem.classList.add('error');
+        queueItem.querySelector('.badge').className = 'badge bg-danger';
+        queueItem.querySelector('.badge').innerHTML = '<i class="bi bi-x-circle"></i> Failed';
+        showError(`${file.name}: ${error.message}`);
+    })
+    .finally(() => {
+        uploadedCount++;
+        document.getElementById('uploadedCount').textContent = uploadedCount;
+        updateProgress();
+        uploadNextFile();
+    });
+}
+
+function updateProgress() {
+    const percent = Math.round((uploadedCount / totalCount) * 100);
+    progressBar.style.width = percent + '%';
+    progressBar.textContent = percent + '%';
+}
+
+function onUploadComplete() {
+    successMessage.style.display = 'block';
+    document.getElementById('successCount').textContent = uploadedCount;
+    progressBar.classList.remove('progress-bar-animated');
+}
+
+function showError(message) {
+    errorMessage.style.display = 'block';
+    const errorItem = document.createElement('p');
+    errorItem.className = 'mb-1';
+    errorItem.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${message}`;
+    errorList.appendChild(errorItem);
+}
+
+function resetUpload() {
+    filesToUpload = [];
+    uploadedCount = 0;
+    totalCount = 0;
+    uploadProgress.style.display = 'none';
+    uploadQueue.style.display = 'none';
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+    queueList.innerHTML = '';
+    errorList.innerHTML = '';
+    fileInput.value = '';
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+</script>
+{% endblock %}
