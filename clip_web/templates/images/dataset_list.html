@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Datasets - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item active">Datasets</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-images"></i> Image Datasets</h1>
+        <p class="text-muted">Manage image collections for {{ project.name }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if can_edit %}
+            <a href="{% url 'images:dataset_create' project.slug %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Dataset
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Search Bar -->
+{% if datasets or search %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row">
+            <div class="col-md-10">
+                <input type="text"
+                       class="form-control"
+                       name="search"
+                       value="{{ search }}"
+                       placeholder="Search datasets by name or description...">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" type="submit">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Datasets Grid -->
+{% if datasets %}
+    <div class="row g-4">
+        {% for dataset in datasets %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-folder2"></i>
+                        <a href="{% url 'images:dataset_detail' project.slug dataset.id %}" class="text-decoration-none">
+                            {{ dataset.name }}
+                        </a>
+                    </h5>
+
+                    {% if dataset.description %}
+                        <p class="card-text text-muted small">
+                            {{ dataset.description|truncatewords:20 }}
+                        </p>
+                    {% else %}
+                        <p class="card-text text-muted small fst-italic">
+                            No description provided
+                        </p>
+                    {% endif %}
+
+                    <!-- Dataset Statistics -->
+                    <div class="text-center mt-3 mb-2">
+                        <div class="text-primary">
+                            <i class="bi bi-images" style="font-size: 2rem;"></i>
+                        </div>
+                        <h4 class="mt-2">{{ dataset.image_count|default:0 }}</h4>
+                        <small class="text-muted">
+                            {% if dataset.image_count == 1 %}image{% else %}images{% endif %}
+                        </small>
+                    </div>
+
+                    <!-- Creator and Date -->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="bi bi-person"></i> {{ dataset.created_by.get_full_name|default:dataset.created_by.username }}
+                            <span class="float-end">
+                                {{ dataset.created_at|timesince }} ago
+                            </span>
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'images:dataset_detail' project.slug dataset.id %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        {% if can_edit %}
+                            <div>
+                                <a href="{% url 'images:image_upload' project.slug dataset.id %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-upload"></i> Upload
+                                </a>
+                                <a href="{% url 'images:dataset_update' project.slug dataset.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Dataset pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-images text-muted" style="font-size: 5rem;"></i>
+        <h3 class="mt-4">No Datasets Found</h3>
+        {% if search %}
+            <p class="text-muted">
+                No datasets match your search for "{{ search }}".
+                <a href="{% url 'images:dataset_list' project.slug %}">Clear search</a>
+            </p>
+        {% else %}
+            <p class="text-muted">Create your first dataset to start uploading images!</p>
+            {% if can_edit %}
+                <a href="{% url 'images:dataset_create' project.slug %}" class="btn btn-primary btn-lg mt-2">
+                    <i class="bi bi-plus-circle"></i> Create Dataset
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
