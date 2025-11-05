@@ -232,7 +232,8 @@ def authenticated_client(api_client, user):
 @pytest.fixture
 def mock_clip_service(mocker):
     """Mock the CLIP service for testing."""
-    mock_service = mocker.patch('apps.analysis.clip_service.get_clip_service')
+    # Patch where it's used, not where it's defined
+    mock_service = mocker.patch('apps.api.views.get_clip_service')
     mock_instance = mocker.Mock()
     mock_instance.compare_image_with_texts.return_value = {
         'architecture': 0.85,

@@ -104,6 +104,8 @@ class TestUserRegistrationForm:
         data = {
             'username': 'newuser',
             'email': 'newuser@example.com',
+            'first_name': 'New',
+            'last_name': 'User',
             'password1': 'TestPass123!',
             'password2': 'TestPass123!',
             'institution': 'Test University',

@@ -162,7 +162,7 @@ class ImageDatasetDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ImageDataset
-        fields = ['id', 'name', 'description', 'created_at',
+        fields = ['id', 'project', 'name', 'description', 'created_at',
                   'images', 'image_count', 'total_size']
 
     def get_image_count(self, obj):

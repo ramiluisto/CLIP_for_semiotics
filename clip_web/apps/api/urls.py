@@ -5,6 +5,11 @@ URLs for API app.
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 from .views import (
     ProjectViewSet,
@@ -32,4 +37,9 @@ urlpatterns = [
 
     # Token authentication
     path('v1/auth/token/', obtain_auth_token, name='api-token'),
+
+    # API Documentation
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('docs/', SpectacularSwaggerView.as_view(url_name='api:schema'), name='swagger-ui'),
+    path('redoc/', SpectacularRedocView.as_view(url_name='api:schema'), name='redoc'),
 ]
