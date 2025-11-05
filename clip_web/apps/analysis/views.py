@@ -2,6 +2,7 @@
 Views for CLIP analysis management.
 """
 
+from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages

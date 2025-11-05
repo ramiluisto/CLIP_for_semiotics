@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - CLIP for Humanists{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active">Profile</li>
+            </ol>
+        </nav>
+
+        <h1>
+            <i class="bi bi-person-circle"></i> User Profile
+        </h1>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ user.get_full_name|default:user.username }}</h5>
+                <p class="text-muted">{{ user.email }}</p>
+
+                {% if user.userprofile %}
+                <hr>
+                <dl class="row">
+                    {% if user.userprofile.institution %}
+                    <dt class="col-sm-3">Institution</dt>
+                    <dd class="col-sm-9">{{ user.userprofile.institution }}</dd>
+                    {% endif %}
+
+                    {% if user.userprofile.research_area %}
+                    <dt class="col-sm-3">Research Area</dt>
+                    <dd class="col-sm-9">{{ user.userprofile.research_area }}</dd>
+                    {% endif %}
+
+                    {% if user.userprofile.bio %}
+                    <dt class="col-sm-3">Bio</dt>
+                    <dd class="col-sm-9">{{ user.userprofile.bio }}</dd>
+                    {% endif %}
+                </dl>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Account Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Username</dt>
+                    <dd class="col-sm-9">{{ user.username }}</dd>
+
+                    <dt class="col-sm-3">Email</dt>
+                    <dd class="col-sm-9">{{ user.email }}</dd>
+
+                    <dt class="col-sm-3">Member Since</dt>
+                    <dd class="col-sm-9">{{ user.date_joined|date:"F j, Y" }}</dd>
+
+                    <dt class="col-sm-3">Last Login</dt>
+                    <dd class="col-sm-9">{{ user.last_login|date:"F j, Y g:i A" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

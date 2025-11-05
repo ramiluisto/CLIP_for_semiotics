@@ -241,13 +241,9 @@ class AnalysisCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         text_prompts_data = validated_data.pop('text_prompts')
-        user = self.context['request'].user
 
-        # Create analysis
-        analysis = Analysis.objects.create(
-            created_by=user,
-            **validated_data
-        )
+        # Create analysis (created_by is passed from perform_create)
+        analysis = Analysis.objects.create(**validated_data)
 
         # Create text prompts
         for idx, prompt_text in enumerate(text_prompts_data):

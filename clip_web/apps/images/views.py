@@ -296,6 +296,11 @@ class DatasetDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 class ImageUploadView(LoginRequiredMixin, FormView):
     """Handle multiple image uploads."""
     template_name = 'images/image_upload.html'
+    form_class = None  # No form needed, uses AJAX upload
+
+    def get_form(self, form_class=None):
+        """Override to skip form creation."""
+        return None
 
     def dispatch(self, request, *args, **kwargs):
         """Get dataset and check permissions."""
