@@ -246,6 +246,28 @@ def mock_clip_service(mocker):
     return mock_instance
 
 
+@pytest.fixture
+def similarity_results(db, analysis, images):
+    """Create similarity results for visualization testing."""
+    import random
+    prompts = analysis.text_prompts.all()
+    results = []
+
+    for image in images:
+        for prompt in prompts:
+            # Create varied scores for more interesting visualizations
+            score = random.uniform(0.3, 0.9)
+            result = SimilarityResult.objects.create(
+                analysis=analysis,
+                image=image,
+                text_prompt=prompt,
+                similarity_score=round(score, 4)
+            )
+            results.append(result)
+
+    return results
+
+
 @pytest.fixture(autouse=True)
 def media_storage(settings, tmpdir):
     """Use temporary media storage for tests."""
