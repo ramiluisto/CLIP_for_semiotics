@@ -346,25 +346,303 @@ class AnalysisViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class VisualizationViewSet(viewsets.ReadOnlyModelViewSet):
+class VisualizationViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for Visualization model (read-only).
+    ViewSet for Visualization model with full CRUD.
+
+    Actions:
+    - list: Get all accessible visualizations
+    - retrieve: Get a single visualization
+    - create: Generate a new visualization
+    - destroy: Delete a visualization
+    - regenerate: Create a new version of an existing visualization
+    - generate_default: Generate default visualizations for an analysis
     """
     permission_classes = [IsAuthenticated]
     serializer_class = VisualizationSerializer
-    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
-    ordering_fields = ['created_at', 'viz_type']
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend, filters.SearchFilter]
+    ordering_fields = ['created_at', 'viz_type', 'file_size']
     ordering = ['-created_at']
-    filterset_fields = ['viz_type', 'analysis']
+    filterset_fields = ['viz_type', 'analysis', 'file_format']
+    search_fields = ['title', 'analysis__name']
 
     def get_queryset(self):
         """Return visualizations from user's analyses."""
         user = self.request.user
         return Visualization.objects.filter(
-            analysis__project__in=Project.objects.filter(
-                Q(owner=user) | Q(collaborators=user)
-            )
+            Q(analysis__dataset__project__owner=user) |
+            Q(analysis__dataset__project__collaborators=user) |
+            Q(analysis__dataset__project__is_public=True)
+        ).select_related(
+            'analysis',
+            'analysis__dataset',
+            'analysis__dataset__project',
+            'created_by'
         ).distinct()
+
+    def perform_create(self, serializer):
+        """Generate visualization on creation."""
+        from apps.visualizations.tasks import generate_custom_visualization
+
+        # Get parameters from request
+        analysis_id = self.request.data.get('analysis_id')
+        viz_type = self.request.data.get('viz_type')
+        config = self.request.data.get('config', {})
+        async_generation = self.request.data.get('async', True)
+
+        if not analysis_id or not viz_type:
+            raise ValueError("analysis_id and viz_type are required")
+
+        # Verify permissions
+        analysis = get_object_or_404(Analysis, id=analysis_id)
+        project = analysis.dataset.project
+        if not (project.owner == self.request.user or
+                self.request.user in project.collaborators.all()):
+            raise PermissionError("You don't have permission to generate visualizations for this analysis")
+
+        if async_generation:
+            # Generate asynchronously
+            task = generate_custom_visualization.delay(
+                analysis_id=analysis_id,
+                viz_type=viz_type,
+                config=config,
+                user_id=self.request.user.id
+            )
+            # Return task info instead of visualization
+            raise Response({
+                'status': 'generating',
+                'task_id': task.id,
+                'message': 'Visualization is being generated in the background'
+            }, status=status.HTTP_202_ACCEPTED)
+        else:
+            # Generate synchronously
+            from apps.visualizations.generators import (
+                HeatmapGenerator,
+                CorrelationMatrixGenerator,
+                ImageGridGenerator
+            )
+
+            generator_map = {
+                'heatmap': HeatmapGenerator,
+                'correlation': CorrelationMatrixGenerator,
+                'image_grid': ImageGridGenerator,
+            }
+
+            generator_class = generator_map.get(viz_type)
+            if not generator_class:
+                raise ValueError(f"Unknown visualization type: {viz_type}")
+
+            generator = generator_class(analysis, config=config)
+            visualization = generator.generate_and_save(
+                user=self.request.user,
+                title=self.request.data.get('title')
+            )
+
+            serializer.instance = visualization
+
+    def perform_destroy(self, instance):
+        """Only allow owner or project owner to delete."""
+        project = instance.analysis.dataset.project
+        if not (instance.created_by == self.request.user or
+                project.owner == self.request.user):
+            raise PermissionError("You don't have permission to delete this visualization")
+
+        instance.delete()
+
+    @action(detail=True, methods=['post'])
+    def regenerate(self, request, pk=None):
+        """
+        Regenerate a visualization with updated data.
+
+        POST /api/v1/visualizations/{id}/regenerate/
+        Body: {
+            "config": {...},  # Optional: new configuration
+            "async": true     # Optional: async generation (default: true)
+        }
+        """
+        visualization = self.get_object()
+
+        # Check permissions
+        project = visualization.analysis.dataset.project
+        if not (project.owner == request.user or
+                request.user in project.collaborators.all()):
+            return Response(
+                {'error': "You don't have permission to regenerate this visualization"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get config (use existing or new)
+        config = request.data.get('config', visualization.config or {})
+        async_generation = request.data.get('async', True)
+
+        if async_generation:
+            from apps.visualizations.tasks import generate_custom_visualization
+
+            task = generate_custom_visualization.delay(
+                analysis_id=visualization.analysis.id,
+                viz_type=visualization.viz_type,
+                config=config,
+                user_id=request.user.id
+            )
+
+            return Response({
+                'status': 'generating',
+                'task_id': task.id,
+                'message': f'Regenerating {visualization.get_viz_type_display()} in the background'
+            }, status=status.HTTP_202_ACCEPTED)
+        else:
+            # Synchronous regeneration
+            from apps.visualizations.generators import (
+                HeatmapGenerator,
+                CorrelationMatrixGenerator,
+                ImageGridGenerator
+            )
+
+            generator_map = {
+                'heatmap': HeatmapGenerator,
+                'correlation': CorrelationMatrixGenerator,
+                'image_grid': ImageGridGenerator,
+            }
+
+            generator_class = generator_map.get(visualization.viz_type)
+            if not generator_class:
+                return Response(
+                    {'error': f'Unknown visualization type: {visualization.viz_type}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                generator = generator_class(visualization.analysis, config=config)
+                new_visualization = generator.generate_and_save(user=request.user)
+
+                serializer = self.get_serializer(new_visualization)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+    @action(detail=False, methods=['post'])
+    def generate_default(self, request):
+        """
+        Generate default visualizations for an analysis.
+
+        POST /api/v1/visualizations/generate_default/
+        Body: {
+            "analysis_id": 123,
+            "async": true  # Optional: async generation (default: true)
+        }
+        """
+        analysis_id = request.data.get('analysis_id')
+        if not analysis_id:
+            return Response(
+                {'error': 'analysis_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify permissions
+        analysis = get_object_or_404(Analysis, id=analysis_id)
+        project = analysis.dataset.project
+        if not (project.owner == request.user or
+                request.user in project.collaborators.all()):
+            return Response(
+                {'error': "You don't have permission to generate visualizations for this analysis"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        async_generation = request.data.get('async', True)
+
+        if async_generation:
+            from apps.visualizations.tasks import generate_default_visualizations
+
+            task = generate_default_visualizations.delay(
+                analysis_id=analysis_id,
+                user_id=request.user.id
+            )
+
+            return Response({
+                'status': 'generating',
+                'task_id': task.id,
+                'message': 'Generating default visualizations in the background',
+                'expected_count': 3  # heatmap, correlation, image_grid
+            }, status=status.HTTP_202_ACCEPTED)
+        else:
+            # Synchronous generation
+            from apps.visualizations.generators import (
+                HeatmapGenerator,
+                CorrelationMatrixGenerator,
+                ImageGridGenerator
+            )
+
+            created = []
+            errors = []
+
+            # Generate each type
+            generators = [
+                ('heatmap', HeatmapGenerator, {}),
+                ('correlation', CorrelationMatrixGenerator, {}),
+                ('image_grid', ImageGridGenerator, {
+                    'cols': 3,
+                    'max_images': 12,
+                    'sort_by': 'score',
+                    'sort_order': 'desc'
+                }),
+            ]
+
+            for viz_type, generator_class, config in generators:
+                try:
+                    generator = generator_class(analysis, config=config)
+                    visualization = generator.generate_and_save(user=request.user)
+                    created.append(self.get_serializer(visualization).data)
+                except Exception as e:
+                    errors.append({
+                        'viz_type': viz_type,
+                        'error': str(e)
+                    })
+
+            response_data = {
+                'created': created,
+                'errors': errors,
+                'success_count': len(created),
+                'error_count': len(errors)
+            }
+
+            response_status = status.HTTP_201_CREATED if created else status.HTTP_500_INTERNAL_SERVER_ERROR
+            return Response(response_data, status=response_status)
+
+    @action(detail=False, methods=['get'])
+    def task_status(self, request):
+        """
+        Check the status of a generation task.
+
+        GET /api/v1/visualizations/task_status/?task_id=abc123
+        """
+        from celery.result import AsyncResult
+
+        task_id = request.query_params.get('task_id')
+        if not task_id:
+            return Response(
+                {'error': 'task_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        task = AsyncResult(task_id)
+
+        response_data = {
+            'task_id': task_id,
+            'status': task.state,
+            'ready': task.ready(),
+        }
+
+        if task.ready():
+            if task.successful():
+                response_data['result'] = task.result
+            else:
+                response_data['error'] = str(task.info)
+
+        return Response(response_data)
 
 
 class ExportJobViewSet(viewsets.ReadOnlyModelViewSet):
