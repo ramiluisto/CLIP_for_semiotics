@@ -131,32 +131,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    {% if analysis.status == 'processing' %}
-                        <div class="progress" style="height: 25px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
-                                 role="progressbar"
-                                 style="width: {{ analysis.progress_percentage }}%"
-                                 id="progress-{{ analysis.id }}">
-                                {{ analysis.progress_percentage }}%
-                            </div>
-                        </div>
-                        <small class="text-muted" id="progress-text-{{ analysis.id }}">
-                            {{ analysis.images_processed }}/{{ analysis.total_images }} images
-                        </small>
-                    {% elif analysis.status == 'completed' %}
-                        <div class="text-center">
-                            <small class="text-muted">Completed in</small><br>
-                            <strong>{{ analysis.processing_time_seconds|floatformat:1 }}s</strong>
-                        </div>
-                    {% elif analysis.status == 'failed' %}
-                        <div class="text-danger small">
-                            <i class="bi bi-exclamation-triangle"></i> Failed
-                        </div>
-                    {% else %}
-                        <div class="text-muted small">
-                            <i class="bi bi-clock"></i> Queued
-                        </div>
-                    {% endif %}
+                    {% include 'analysis/partials/analysis_status.html' with analysis=analysis project=project %}
                 </div>
 
                 <div class="col-md-3 text-end">
@@ -281,37 +256,4 @@
         </ul>
     </div>
 </div>
-
-<script>
-// Auto-refresh progress for processing analyses
-{% if status_filter == 'processing' or not status_filter %}
-    setInterval(function() {
-        {% for analysis in analyses %}
-            {% if analysis.status == 'processing' %}
-                fetch('{% url "analysis:progress" project.slug analysis.id %}')
-                    .then(response => response.json())
-                    .then(data => {
-                        const progressBar = document.getElementById('progress-{{ analysis.id }}');
-                        const progressText = document.getElementById('progress-text-{{ analysis.id }}');
-
-                        if (progressBar) {
-                            progressBar.style.width = data.progress_percentage + '%';
-                            progressBar.textContent = data.progress_percentage + '%';
-                        }
-
-                        if (progressText) {
-                            progressText.textContent = data.images_processed + '/' + data.total_images + ' images';
-                        }
-
-                        // Reload page if status changed
-                        if (data.status !== 'processing') {
-                            location.reload();
-                        }
-                    })
-                    .catch(error => console.error('Error fetching progress:', error));
-            {% endif %}
-        {% endfor %}
-    }, 3000); // Update every 3 seconds
-{% endif %}
-</script>
 {% endblock %}

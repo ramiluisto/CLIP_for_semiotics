@@ -35,4 +35,12 @@ urlpatterns = [
     path('<slug:project_slug>/analyses/<int:analysis_id>/cancel/',
          views.analysis_cancel,
          name='cancel'),
+
+    # HTMX partials
+    path('<slug:project_slug>/analyses/<int:analysis_id>/partials/progress/',
+         views.analysis_progress_partial,
+         name='progress_partial'),
+    path('<slug:project_slug>/analyses/<int:analysis_id>/partials/status/',
+         views.analysis_status_partial,
+         name='status_partial'),
 ]

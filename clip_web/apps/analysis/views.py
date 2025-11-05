@@ -372,3 +372,34 @@ def analysis_cancel(request, project_slug, analysis_id):
     return redirect('analysis:detail',
                    project_slug=project_slug,
                    analysis_id=analysis_id)
+
+def analysis_progress_partial(request, project_slug, analysis_id):
+    """HTMX partial for progress indicator."""
+    analysis = get_object_or_404(
+        Analysis,
+        id=analysis_id,
+        project__slug=project_slug
+    )
+
+    project = analysis.project
+
+    return render(request, 'analysis/partials/progress_indicator.html', {
+        'analysis': analysis,
+        'project': project
+    })
+
+
+def analysis_status_partial(request, project_slug, analysis_id):
+    """HTMX partial for status display in list view."""
+    analysis = get_object_or_404(
+        Analysis,
+        id=analysis_id,
+        project__slug=project_slug
+    )
+
+    project = analysis.project
+
+    return render(request, 'analysis/partials/analysis_status.html', {
+        'analysis': analysis,
+        'project': project
+    })

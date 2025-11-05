@@ -1,0 +1,40 @@
+<!-- Progress indicator partial for HTMX polling -->
+{% if analysis.status == 'processing' %}
+    <div class="mb-2"
+         hx-get="{% url 'analysis:progress_partial' project.slug analysis.id %}"
+         hx-trigger="every 2s"
+         hx-swap="outerHTML">
+        <div class="d-flex justify-content-between mb-1">
+            <span>Processing Images</span>
+            <span>{{ analysis.progress_percentage }}%</span>
+        </div>
+        <div class="progress" style="height: 30px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                 role="progressbar"
+                 style="width: {{ analysis.progress_percentage }}%">
+            </div>
+        </div>
+    </div>
+    <p class="text-muted mb-0">
+        {{ analysis.images_processed }}/{{ analysis.total_images }} images processed
+    </p>
+{% elif analysis.status == 'completed' %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> Analysis completed!
+        <a href="{% url 'analysis:detail' project.slug analysis.id %}" class="alert-link">View results</a>
+    </div>
+{% elif analysis.status == 'failed' %}
+    <div class="alert alert-danger">
+        <i class="bi bi-x-circle"></i> Analysis failed.
+        {% if analysis.error_message %}
+            <br><small>{{ analysis.error_message }}</small>
+        {% endif %}
+    </div>
+{% elif analysis.status == 'pending' %}
+    <div class="text-muted"
+         hx-get="{% url 'analysis:progress_partial' project.slug analysis.id %}"
+         hx-trigger="every 3s"
+         hx-swap="outerHTML">
+        <i class="bi bi-clock"></i> Queued - waiting to start...
+    </div>
+{% endif %}

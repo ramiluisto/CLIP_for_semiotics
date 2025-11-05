@@ -1,0 +1,42 @@
+<!-- Analysis status card partial for HTMX -->
+<div id="analysis-status-{{ analysis.id }}"
+     {% if analysis.status in 'processing,pending' %}
+     hx-get="{% url 'analysis:status_partial' project.slug analysis.id %}"
+     hx-trigger="every 3s"
+     hx-swap="outerHTML"
+     {% endif %}>
+
+    {% if analysis.status == 'processing' %}
+        <div class="progress" style="height: 25px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                 role="progressbar"
+                 style="width: {{ analysis.progress_percentage }}%">
+                {{ analysis.progress_percentage }}%
+            </div>
+        </div>
+        <small class="text-muted">
+            {{ analysis.images_processed }}/{{ analysis.total_images }} images
+        </small>
+
+    {% elif analysis.status == 'completed' %}
+        <div class="text-center">
+            <small class="text-muted">Completed in</small><br>
+            <strong>{{ analysis.processing_time_seconds|floatformat:1 }}s</strong>
+        </div>
+
+    {% elif analysis.status == 'failed' %}
+        <div class="text-danger small">
+            <i class="bi bi-exclamation-triangle"></i> Failed
+        </div>
+
+    {% elif analysis.status == 'pending' %}
+        <div class="text-muted small">
+            <i class="bi bi-clock"></i> Queued
+        </div>
+
+    {% else %}
+        <div class="text-muted small">
+            {{ analysis.get_status_display }}
+        </div>
+    {% endif %}
+</div>
