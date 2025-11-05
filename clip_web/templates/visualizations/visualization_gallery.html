@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Visualizations - {{ analysis.name }} - CLIP for Humanists{% endblock %}
+
+{% block extra_css %}
+<style>
+    .viz-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+        height: 100%;
+    }
+    .viz-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .viz-thumbnail {
+        width: 100%;
+        height: 250px;
+        object-fit: contain;
+        background-color: #f8f9fa;
+        padding: 10px;
+    }
+    .viz-type-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'projects:detail' analysis.dataset.project.slug %}">
+                    {{ analysis.dataset.project.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'analysis:detail' analysis.dataset.project.slug analysis.id %}">
+                    {{ analysis.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Visualizations</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="bi bi-bar-chart-line"></i>
+                Visualizations
+            </h1>
+            <p class="text-muted">
+                Analysis: <strong>{{ analysis.name }}</strong> |
+                {{ visualizations.count }} visualization{{ visualizations.count|pluralize }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if can_edit %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateModal">
+                <i class="bi bi-plus-circle"></i> Generate Visualizations
+            </button>
+            <a href="{% url 'analysis:detail' analysis.dataset.project.slug analysis.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Analysis
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Visualization Grid -->
+    {% if visualizations %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for viz in visualizations %}
+        <div class="col">
+            <div class="card viz-card">
+                <span class="badge bg-primary viz-type-badge">
+                    {{ viz.get_viz_type_display }}
+                </span>
+
+                {% if viz.file_format == 'html' %}
+                <!-- HTML visualizations (maps) shown as iframe preview -->
+                <div style="height: 250px; overflow: hidden; background-color: #f8f9fa;">
+                    <iframe src="{{ viz.get_file_url }}"
+                            style="width: 100%; height: 100%; border: none; pointer-events: none;">
+                    </iframe>
+                </div>
+                {% else %}
+                <!-- Image visualizations -->
+                <img src="{{ viz.get_file_url }}"
+                     class="viz-thumbnail"
+                     alt="{{ viz.title }}"
+                     onclick="window.location.href='{% url 'visualizations:detail' viz.id %}'">
+                {% endif %}
+
+                <div class="card-body">
+                    <h5 class="card-title">{{ viz.title }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar"></i> {{ viz.created_at|date:"M d, Y" }} |
+                            <i class="bi bi-file-earmark"></i> {{ viz.file_format|upper }}
+                            {% if viz.file_size %}
+                            | {{ viz.file_size|filesizeformat }}
+                            {% endif %}
+                        </small>
+                    </p>
+
+                    <div class="btn-group btn-group-sm w-100" role="group">
+                        <a href="{% url 'visualizations:detail' viz.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        <a href="{{ viz.get_file_url }}" download class="btn btn-outline-success">
+                            <i class="bi bi-download"></i> Download
+                        </a>
+                        {% if can_edit %}
+                        <button class="btn btn-outline-danger"
+                                onclick="confirmDelete({{ viz.id }}, '{{ viz.title|escapejs }}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="bi bi-graph-up"></i>
+        <h3>No Visualizations Yet</h3>
+        <p>Generate visualizations to see similarity heatmaps, correlation matrices, and more.</p>
+        {% if can_edit %}
+        <button class="btn btn-lg btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#generateModal">
+            <i class="bi bi-plus-circle"></i> Generate Visualizations
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Generate Visualizations Modal -->
+{% if can_edit %}
+<div class="modal fade" id="generateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Generate Visualizations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Choose which visualizations to generate:</p>
+
+                <form id="generateForm" method="post" action="{% url 'visualizations:generate' analysis.id %}">
+                    {% csrf_token %}
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="viz_types"
+                               value="heatmap" id="vizHeatmap" checked>
+                        <label class="form-check-label" for="vizHeatmap">
+                            <strong>Similarity Heatmap</strong><br>
+                            <small class="text-muted">Color-coded matrix of image-text similarities</small>
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="viz_types"
+                               value="correlation" id="vizCorrelation" checked>
+                        <label class="form-check-label" for="vizCorrelation">
+                            <strong>Correlation Matrix</strong><br>
+                            <small class="text-muted">How concepts co-occur across images</small>
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="viz_types"
+                               value="image_grid" id="vizGrid" checked>
+                        <label class="form-check-label" for="vizGrid">
+                            <strong>Image Grid</strong><br>
+                            <small class="text-muted">Top images sorted by similarity scores</small>
+                        </label>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="async_generation"
+                               id="asyncGen" checked>
+                        <label class="form-check-label" for="asyncGen">
+                            Generate in background (recommended for large datasets)
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="generateForm" class="btn btn-primary">
+                    <i class="bi bi-lightning-charge"></i> Generate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this visualization?</p>
+                <p><strong id="deleteVizName"></strong></p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(vizId, vizName) {
+    document.getElementById('deleteVizName').textContent = vizName;
+    document.getElementById('deleteForm').action = '/visualizations/' + vizId + '/delete/';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ visualization.title }} - CLIP for Humanists{% endblock %}
+
+{% block extra_css %}
+<style>
+    .viz-display {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .viz-display img {
+        max-width: 100%;
+        height: auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 4px;
+    }
+    .viz-display iframe {
+        width: 100%;
+        min-height: 600px;
+        border: none;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .viz-meta {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    .action-buttons .btn {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'projects:detail' visualization.analysis.dataset.project.slug %}">
+                    {{ visualization.analysis.dataset.project.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'analysis:detail' visualization.analysis.dataset.project.slug visualization.analysis.id %}">
+                    {{ visualization.analysis.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'visualizations:gallery' visualization.analysis.id %}">
+                    Visualizations
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ visualization.get_viz_type_display }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="bi bi-bar-chart-line"></i>
+                {{ visualization.title }}
+            </h1>
+            <p class="text-muted">
+                <span class="badge bg-primary">{{ visualization.get_viz_type_display }}</span>
+                Analysis: <strong>{{ visualization.analysis.name }}</strong>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'visualizations:gallery' visualization.analysis.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Gallery
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Visualization Display -->
+        <div class="col-lg-9">
+            <div class="viz-display">
+                {% if visualization.file_format == 'html' %}
+                <!-- HTML visualizations (interactive maps) -->
+                <iframe src="{{ visualization.get_file_url }}" id="vizFrame"></iframe>
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resizeFrame('small')">
+                        <i class="bi bi-phone"></i> Small
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resizeFrame('medium')">
+                        <i class="bi bi-tablet"></i> Medium
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resizeFrame('large')">
+                        <i class="bi bi-laptop"></i> Large
+                    </button>
+                </div>
+                {% else %}
+                <!-- Image visualizations (PNG, SVG, PDF) -->
+                <img src="{{ visualization.get_file_url }}"
+                     alt="{{ visualization.title }}"
+                     id="vizImage">
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="zoomImage(0.75)">
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="zoomImage(1)">
+                        <i class="bi bi-arrows-fullscreen"></i> 100%
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="zoomImage(1.5)">
+                        <i class="bi bi-zoom-in"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons mb-4">
+                <a href="{{ visualization.get_file_url }}" download class="btn btn-success">
+                    <i class="bi bi-download"></i> Download {{ visualization.file_format|upper }}
+                </a>
+
+                {% if visualization.file_format != 'html' %}
+                <button class="btn btn-outline-primary" onclick="openFullscreen()">
+                    <i class="bi bi-fullscreen"></i> Fullscreen
+                </button>
+                {% endif %}
+
+                <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#shareModal">
+                    <i class="bi bi-share"></i> Share
+                </button>
+
+                {% if can_edit %}
+                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#regenerateModal">
+                    <i class="bi bi-arrow-clockwise"></i> Regenerate
+                </button>
+
+                <button class="btn btn-outline-danger" onclick="confirmDelete()">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Metadata Sidebar -->
+        <div class="col-lg-3">
+            <div class="viz-meta">
+                <h5 class="mb-3">Visualization Info</h5>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Type</dt>
+                    <dd class="col-sm-7">{{ visualization.get_viz_type_display }}</dd>
+
+                    <dt class="col-sm-5">Format</dt>
+                    <dd class="col-sm-7">{{ visualization.file_format|upper }}</dd>
+
+                    {% if visualization.file_size %}
+                    <dt class="col-sm-5">Size</dt>
+                    <dd class="col-sm-7">{{ visualization.file_size|filesizeformat }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-5">Created</dt>
+                    <dd class="col-sm-7">{{ visualization.created_at|date:"M d, Y g:i A" }}</dd>
+
+                    {% if visualization.created_by %}
+                    <dt class="col-sm-5">Created By</dt>
+                    <dd class="col-sm-7">{{ visualization.created_by.get_full_name|default:visualization.created_by.username }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-5">Analysis</dt>
+                    <dd class="col-sm-7">
+                        <a href="{% url 'analysis:detail' visualization.analysis.dataset.project.slug visualization.analysis.id %}">
+                            {{ visualization.analysis.name }}
+                        </a>
+                    </dd>
+
+                    <dt class="col-sm-5">Dataset</dt>
+                    <dd class="col-sm-7">{{ visualization.analysis.dataset.name }}</dd>
+
+                    <dt class="col-sm-5">Images</dt>
+                    <dd class="col-sm-7">{{ visualization.analysis.dataset.images.count }}</dd>
+
+                    <dt class="col-sm-5">Prompts</dt>
+                    <dd class="col-sm-7">{{ visualization.analysis.text_prompts.count }}</dd>
+                </dl>
+
+                {% if visualization.config %}
+                <hr>
+                <h6 class="mb-2">Configuration</h6>
+                <div class="small">
+                    {% for key, value in visualization.config.items %}
+                    <div><strong>{{ key }}:</strong> {{ value }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Help Text -->
+            <div class="card mt-3">
+                <div class="card-body small">
+                    <h6 class="card-title">About This Visualization</h6>
+                    {% if visualization.viz_type == 'heatmap' %}
+                    <p>This heatmap shows similarity scores between images (rows) and text prompts (columns). Warmer colors indicate higher similarity.</p>
+                    {% elif visualization.viz_type == 'correlation' %}
+                    <p>This matrix shows correlations between text prompts. Values close to +1 mean concepts co-occur, close to -1 means they're mutually exclusive.</p>
+                    {% elif visualization.viz_type == 'image_grid' %}
+                    <p>This grid shows images sorted by their similarity scores. Higher-scoring images better match the analyzed concepts.</p>
+                    {% elif visualization.viz_type == 'map' %}
+                    <p>This interactive map shows image locations based on GPS metadata. Click markers to view images.</p>
+                    {% else %}
+                    <p>This visualization provides insights into your CLIP analysis results.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Visualization</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Direct Link</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="shareUrl"
+                               value="{{ request.build_absolute_uri }}" readonly>
+                        <button class="btn btn-outline-secondary" onclick="copyToClipboard('shareUrl')">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Download Link</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="downloadUrl"
+                               value="{{ request.scheme }}://{{ request.get_host }}{{ visualization.get_file_url }}" readonly>
+                        <button class="btn btn-outline-secondary" onclick="copyToClipboard('downloadUrl')">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Regenerate Modal -->
+{% if can_edit %}
+<div class="modal fade" id="regenerateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Regenerate Visualization</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This will create a new version of this visualization with updated data.</p>
+                <p class="text-muted"><small>The current visualization will remain accessible in the gallery.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'visualizations:regenerate' visualization.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Regenerate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this visualization?</p>
+                <p><strong>{{ visualization.title }}</strong></p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'visualizations:delete' visualization.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image zoom functionality
+let currentZoom = 1;
+function zoomImage(scale) {
+    const img = document.getElementById('vizImage');
+    if (img) {
+        currentZoom = scale;
+        img.style.transform = `scale(${scale})`;
+        img.style.transformOrigin = 'center';
+    }
+}
+
+// Iframe resize functionality
+function resizeFrame(size) {
+    const frame = document.getElementById('vizFrame');
+    if (frame) {
+        const sizes = {
+            'small': '400px',
+            'medium': '600px',
+            'large': '800px'
+        };
+        frame.style.minHeight = sizes[size] || '600px';
+    }
+}
+
+// Fullscreen functionality
+function openFullscreen() {
+    const img = document.getElementById('vizImage');
+    if (img && img.requestFullscreen) {
+        img.requestFullscreen();
+    }
+}
+
+// Copy to clipboard
+function copyToClipboard(elementId) {
+    const input = document.getElementById(elementId);
+    input.select();
+    document.execCommand('copy');
+
+    // Show feedback
+    const btn = input.nextElementSibling;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+    }, 2000);
+}
+
+// Delete confirmation
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}
