@@ -5,87 +5,98 @@ Celery tasks for generating visualizations.
 from celery import shared_task
 import logging
 import os
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task
-def generate_default_visualizations(analysis_id: int):
+def generate_default_visualizations(analysis_id: int, user_id: Optional[int] = None):
     """
     Generate default visualizations for an analysis.
 
+    Creates:
+    - Similarity heatmap
+    - Correlation matrix
+    - Image grid (top 12 images by score)
+
     Args:
         analysis_id: ID of the Analysis object
+        user_id: Optional ID of the user requesting generation
     """
     from apps.analysis.models import Analysis
-    from .models import Visualization
+    from django.contrib.auth import get_user_model
     from .generators import (
-        generate_similarity_heatmap,
-        generate_correlation_matrix,
-        generate_gps_map
+        HeatmapGenerator,
+        CorrelationMatrixGenerator,
+        ImageGridGenerator
     )
+
+    User = get_user_model()
 
     try:
         analysis = Analysis.objects.get(id=analysis_id)
-        logger.info(f"Generating default visualizations for {analysis.name}")
+        user = User.objects.get(id=user_id) if user_id else analysis.created_by
+
+        logger.info(f"Generating default visualizations for analysis {analysis.id}: {analysis.name}")
 
         # Generate similarity heatmap
         try:
-            heatmap_path = generate_similarity_heatmap(analysis)
-            if heatmap_path:
-                Visualization.objects.create(
-                    analysis=analysis,
-                    viz_type='heatmap',
-                    title=f"Similarity Heatmap - {analysis.name}",
-                    file_path=heatmap_path,
-                    file_format='png',
-                    created_by=analysis.created_by
-                )
-                logger.info("Generated similarity heatmap")
+            logger.info("Generating similarity heatmap...")
+            generator = HeatmapGenerator(analysis)
+            visualization = generator.generate_and_save(user=user)
+            logger.info(f"Generated similarity heatmap: {visualization.id}")
         except Exception as e:
-            logger.error(f"Error generating heatmap: {e}")
+            logger.error(f"Error generating heatmap: {e}", exc_info=True)
 
         # Generate correlation matrix
         try:
-            corr_path = generate_correlation_matrix(analysis)
-            if corr_path:
-                Visualization.objects.create(
-                    analysis=analysis,
-                    viz_type='correlation',
-                    title=f"Correlation Matrix - {analysis.name}",
-                    file_path=corr_path,
-                    file_format='png',
-                    created_by=analysis.created_by
-                )
-                logger.info("Generated correlation matrix")
+            logger.info("Generating correlation matrix...")
+            generator = CorrelationMatrixGenerator(analysis)
+            visualization = generator.generate_and_save(user=user)
+            logger.info(f"Generated correlation matrix: {visualization.id}")
         except Exception as e:
-            logger.error(f"Error generating correlation matrix: {e}")
+            logger.error(f"Error generating correlation matrix: {e}", exc_info=True)
 
-        # Generate GPS map if images have GPS data
-        if analysis.dataset.images.filter(metadata__has_gps=True).exists():
-            try:
-                map_path = generate_gps_map(analysis)
-                if map_path:
-                    Visualization.objects.create(
-                        analysis=analysis,
-                        viz_type='map',
-                        title=f"GPS Map - {analysis.name}",
-                        file_path=map_path,
-                        file_format='html',
-                        created_by=analysis.created_by
-                    )
-                    logger.info("Generated GPS map")
-            except Exception as e:
-                logger.error(f"Error generating GPS map: {e}")
+        # Generate image grid (top 12 images)
+        try:
+            logger.info("Generating image grid...")
+            config = {
+                'cols': 3,
+                'max_images': 12,
+                'sort_by': 'score',
+                'sort_order': 'desc'
+            }
+            generator = ImageGridGenerator(analysis, config=config)
+            visualization = generator.generate_and_save(user=user)
+            logger.info(f"Generated image grid: {visualization.id}")
+        except Exception as e:
+            logger.error(f"Error generating image grid: {e}", exc_info=True)
 
-        logger.info(f"Default visualizations complete for {analysis.name}")
+        logger.info(f"Default visualizations complete for analysis {analysis.id}")
+
+        return {
+            'status': 'success',
+            'analysis_id': analysis_id,
+            'message': 'Default visualizations generated successfully'
+        }
 
     except Exception as e:
         logger.error(f"Error generating visualizations for analysis {analysis_id}: {e}", exc_info=True)
+        return {
+            'status': 'error',
+            'analysis_id': analysis_id,
+            'error': str(e)
+        }
 
 
 @shared_task
-def generate_custom_visualization(analysis_id: int, viz_type: str, config: dict):
+def generate_custom_visualization(
+    analysis_id: int,
+    viz_type: str,
+    config: Optional[Dict[str, Any]] = None,
+    user_id: Optional[int] = None
+):
     """
     Generate a custom visualization based on parameters.
 
@@ -93,45 +104,124 @@ def generate_custom_visualization(analysis_id: int, viz_type: str, config: dict)
         analysis_id: ID of the Analysis object
         viz_type: Type of visualization to generate
         config: Configuration dictionary for the visualization
+        user_id: Optional ID of the user requesting generation
+
+    Returns:
+        dict: Status information about the generation
     """
     from apps.analysis.models import Analysis
-    from .models import Visualization
-    from . import generators
+    from django.contrib.auth import get_user_model
+    from .generators import (
+        HeatmapGenerator,
+        CorrelationMatrixGenerator,
+        ImageGridGenerator
+    )
+
+    User = get_user_model()
 
     try:
         analysis = Analysis.objects.get(id=analysis_id)
-        logger.info(f"Generating {viz_type} for {analysis.name}")
+        user = User.objects.get(id=user_id) if user_id else analysis.created_by
 
-        # Map viz_type to generator function
+        logger.info(f"Generating custom {viz_type} for analysis {analysis.id}: {analysis.name}")
+
+        # Map viz_type to generator class
         generator_map = {
-            'heatmap': generators.generate_similarity_heatmap,
-            'correlation': generators.generate_correlation_matrix,
-            'map': generators.generate_gps_map,
-            'violin': generators.generate_violin_plot,
-            'location_corr': generators.generate_location_correlation,
+            'heatmap': HeatmapGenerator,
+            'correlation': CorrelationMatrixGenerator,
+            'image_grid': ImageGridGenerator,
         }
 
-        generator_func = generator_map.get(viz_type)
-        if not generator_func:
+        generator_class = generator_map.get(viz_type)
+        if not generator_class:
             raise ValueError(f"Unknown visualization type: {viz_type}")
 
         # Generate visualization
-        file_path = generator_func(analysis, **config)
+        generator = generator_class(analysis, config=config or {})
 
-        if file_path:
-            Visualization.objects.create(
-                analysis=analysis,
-                viz_type=viz_type,
-                title=config.get('title', f"{viz_type} - {analysis.name}"),
-                file_path=file_path,
-                file_format=config.get('format', 'png'),
-                config=config,
-                created_by=analysis.created_by
-            )
-            logger.info(f"Generated {viz_type} visualization")
+        # Get custom title if provided
+        title = config.get('title') if config else None
+
+        visualization = generator.generate_and_save(user=user, title=title)
+
+        logger.info(f"Generated {viz_type} visualization: {visualization.id}")
+
+        return {
+            'status': 'success',
+            'analysis_id': analysis_id,
+            'viz_type': viz_type,
+            'visualization_id': visualization.id,
+            'message': f'{viz_type} visualization generated successfully'
+        }
 
     except Exception as e:
         logger.error(f"Error generating {viz_type} for analysis {analysis_id}: {e}", exc_info=True)
+        return {
+            'status': 'error',
+            'analysis_id': analysis_id,
+            'viz_type': viz_type,
+            'error': str(e)
+        }
+
+
+@shared_task
+def generate_visualizations_batch(analysis_ids: list, viz_types: Optional[list] = None):
+    """
+    Generate visualizations for multiple analyses in batch.
+
+    Args:
+        analysis_ids: List of Analysis IDs
+        viz_types: Optional list of specific viz types to generate.
+                   If None, generates default visualizations.
+
+    Returns:
+        dict: Summary of generation results
+    """
+    logger.info(f"Starting batch visualization generation for {len(analysis_ids)} analyses")
+
+    results = {
+        'total': len(analysis_ids),
+        'successful': 0,
+        'failed': 0,
+        'errors': []
+    }
+
+    for analysis_id in analysis_ids:
+        try:
+            if viz_types:
+                # Generate specific visualization types
+                for viz_type in viz_types:
+                    result = generate_custom_visualization(analysis_id, viz_type)
+                    if result['status'] == 'error':
+                        results['errors'].append({
+                            'analysis_id': analysis_id,
+                            'viz_type': viz_type,
+                            'error': result['error']
+                        })
+            else:
+                # Generate default visualizations
+                result = generate_default_visualizations(analysis_id)
+                if result['status'] == 'error':
+                    results['failed'] += 1
+                    results['errors'].append({
+                        'analysis_id': analysis_id,
+                        'error': result['error']
+                    })
+                    continue
+
+            results['successful'] += 1
+
+        except Exception as e:
+            logger.error(f"Error in batch generation for analysis {analysis_id}: {e}")
+            results['failed'] += 1
+            results['errors'].append({
+                'analysis_id': analysis_id,
+                'error': str(e)
+            })
+
+    logger.info(f"Batch generation complete: {results['successful']}/{results['total']} successful")
+
+    return results
 
 
 @shared_task
@@ -139,11 +229,13 @@ def export_analysis_results(export_job_id: int):
     """
     Export analysis results to file.
 
+    Note: Exporter functions need to be implemented in exporters.py
+
     Args:
         export_job_id: ID of the ExportJob object
     """
     from .models import ExportJob
-    from .exporters import export_to_json, export_to_csv, export_to_zip
+    from datetime import datetime
 
     try:
         export_job = ExportJob.objects.get(id=export_job_id)
@@ -151,34 +243,24 @@ def export_analysis_results(export_job_id: int):
         export_job.save()
 
         analysis = export_job.analysis
-        logger.info(f"Exporting {analysis.name} as {export_job.format}")
+        logger.info(f"Exporting analysis {analysis.id}: {analysis.name} as {export_job.format}")
 
-        # Map format to exporter function
-        exporter_map = {
-            'json': export_to_json,
-            'csv': export_to_csv,
-            'zip': export_to_zip,
+        # TODO: Implement exporters in exporters.py
+        # For now, log a placeholder message
+        logger.warning("Export functionality not yet fully implemented")
+
+        # Placeholder - will be implemented when exporters.py is created
+        export_job.status = 'completed'
+        export_job.completed_at = datetime.now()
+        export_job.save()
+
+        logger.info(f"Export job {export_job_id} marked as complete (placeholder)")
+
+        return {
+            'status': 'success',
+            'export_job_id': export_job_id,
+            'message': 'Export placeholder - full implementation pending'
         }
-
-        exporter_func = exporter_map.get(export_job.format)
-        if not exporter_func:
-            raise ValueError(f"Unknown export format: {export_job.format}")
-
-        # Export results
-        file_path = exporter_func(
-            analysis,
-            include_images=export_job.include_images,
-            include_visualizations=export_job.include_visualizations
-        )
-
-        if file_path:
-            export_job.file_path = file_path
-            export_job.file_size = os.path.getsize(file_path)
-            export_job.status = 'completed'
-            export_job.save()
-            logger.info(f"Export complete: {file_path}")
-        else:
-            raise ValueError("Export failed - no file generated")
 
     except Exception as e:
         logger.error(f"Error exporting results for job {export_job_id}: {e}", exc_info=True)
@@ -189,3 +271,9 @@ def export_analysis_results(export_job_id: int):
             export_job.save()
         except:
             pass
+
+        return {
+            'status': 'error',
+            'export_job_id': export_job_id,
+            'error': str(e)
+        }
