@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Analysis - {{ analysis.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 offset-lg-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'analysis:list' project.slug %}">Analyses</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'analysis:detail' project.slug analysis.id %}">{{ analysis.name }}</a></li>
+                <li class="breadcrumb-item active">Delete</li>
+            </ol>
+        </nav>
+
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Delete Analysis
+                </h3>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">{{ analysis.name }}</h4>
+
+                <div class="alert alert-danger">
+                    <h5><i class="bi bi-exclamation-octagon"></i> Warning</h5>
+                    <p class="mb-0">
+                        You are about to permanently delete this analysis and all its results.
+                        This action <strong>cannot be undone</strong>.
+                    </p>
+                </div>
+
+                <h5>What will be deleted:</h5>
+                <ul>
+                    <li><strong>{{ analysis.text_prompts.count }}</strong> text prompt(s)</li>
+                    {% if analysis.status == 'completed' %}
+                        <li><strong>{{ analysis.results.count }}</strong> similarity result(s)</li>
+                    {% endif %}
+                    <li>All associated visualizations and exports</li>
+                    <li>Analysis processing history and logs</li>
+                </ul>
+
+                <div class="bg-light p-3 rounded mb-3">
+                    <h6>Analysis Details:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Dataset:</strong> {{ analysis.dataset.name }}</li>
+                        <li><strong>Status:</strong> {{ analysis.get_status_display }}</li>
+                        {% if analysis.description %}
+                            <li><strong>Description:</strong> {{ analysis.description|truncatewords:20 }}</li>
+                        {% endif %}
+                        <li><strong>Created by:</strong> {{ analysis.created_by.get_full_name|default:analysis.created_by.email }}</li>
+                        <li><strong>Created:</strong> {{ analysis.created_at|date:"F j, Y H:i" }}</li>
+                        {% if analysis.completed_at %}
+                            <li><strong>Completed:</strong> {{ analysis.completed_at|date:"F j, Y H:i" }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                {% if analysis.status == 'processing' %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>This analysis is currently processing.</strong>
+                        Deleting it will cancel the ongoing processing task.
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="confirmDelete"
+                               required>
+                        <label class="form-check-label" for="confirmDelete">
+                            I understand that this action cannot be undone and all results will be permanently deleted
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'analysis:detail' project.slug analysis.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="bi bi-trash"></i> Delete Analysis
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <h6><i class="bi bi-info-circle"></i> Alternative Options</h6>
+            <p class="mb-0">
+                Instead of deleting, you can:
+                <ul class="mb-0">
+                    <li>Export the results before deletion for archival purposes</li>
+                    <li>Create a new analysis with different parameters</li>
+                    {% if analysis.status == 'processing' %}
+                        <li>Cancel the processing and let it remain as a record</li>
+                    {% endif %}
+                </ul>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+
+    checkbox.addEventListener('change', function() {
+        deleteButton.disabled = !this.checked;
+    });
+});
+</script>
+{% endblock %}

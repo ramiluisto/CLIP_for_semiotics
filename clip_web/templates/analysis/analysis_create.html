@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Analysis - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'analysis:list' project.slug %}">Analyses</a></li>
+                <li class="breadcrumb-item active">Create</li>
+            </ol>
+        </nav>
+
+        <div class="text-center mb-4">
+            <h1><i class="bi bi-magic"></i> Create CLIP Analysis</h1>
+            <p class="lead text-muted">Analyze your images using semantic text prompts</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="row mb-5">
+            <div class="col-md-10 offset-md-1">
+                <div class="d-flex justify-content-between">
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <strong>1</strong>
+                        </div>
+                        <p class="mt-2 mb-0 small"><strong>Dataset</strong></p>
+                    </div>
+                    <div class="flex-fill align-self-center">
+                        <hr class="border-primary">
+                    </div>
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <strong>2</strong>
+                        </div>
+                        <p class="mt-2 mb-0 small"><strong>Text Prompts</strong></p>
+                    </div>
+                    <div class="flex-fill align-self-center">
+                        <hr class="border-primary">
+                    </div>
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px;">
+                            <strong>3</strong>
+                        </div>
+                        <p class="mt-2 mb-0 small"><strong>Settings</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" id="analysisForm">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Step 1: Dataset Selection -->
+            {% if not dataset %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-images"></i> Step 1: Select Dataset</h4>
+                </div>
+                <div class="card-body">
+                    {% if datasets %}
+                        <div class="mb-3">
+                            <label for="id_dataset" class="form-label">
+                                Choose the image dataset to analyze <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select {% if form.dataset.errors %}is-invalid{% endif %}"
+                                    id="id_dataset"
+                                    name="dataset"
+                                    required>
+                                <option value="">Select a dataset...</option>
+                                {% for ds in datasets %}
+                                    <option value="{{ ds.id }}">
+                                        {{ ds.name }} ({{ ds.image_count }} images)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.dataset.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.dataset.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>No datasets available.</strong>
+                            Please <a href="{% url 'images:dataset_create' project.slug %}">create a dataset</a>
+                            and upload images first.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <!-- Dataset Pre-selected -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-images"></i> Step 1: Dataset</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-folder2-open text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="mb-0">{{ dataset.name }}</h5>
+                            <p class="text-muted mb-0">
+                                {{ dataset.images.count }} images
+                                {% if dataset.description %}
+                                    • {{ dataset.description|truncatewords:15 }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Step 2: Text Prompts -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-tags"></i> Step 2: Text Prompts</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="id_text_prompts" class="form-label">
+                            Text Prompts <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control {% if form.text_prompts.errors %}is-invalid{% endif %}"
+                                  id="id_text_prompts"
+                                  name="text_prompts"
+                                  rows="10"
+                                  required
+                                  placeholder="Enter text prompts, one per line...
+
+Example prompts:
+architecture
+urban landscape
+natural scenery
+people and crowds
+transportation
+commercial signage
+historical buildings">{{ form.text_prompts.value|default:'' }}</textarea>
+                        {% if form.text_prompts.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.text_prompts.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Enter text descriptions or keywords (one per line). Maximum 50 prompts.
+                        </small>
+                    </div>
+
+                    <!-- Prompt Counter -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span id="promptCount">0</span> prompts entered
+                        <span class="float-end text-muted">Limit: 50</span>
+                    </div>
+
+                    <!-- Example Prompts -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="bi bi-lightbulb"></i> Prompt Ideas</h6>
+                            <p class="mb-2 small">Click to add example prompts for different use cases:</p>
+                            <div class="btn-group-vertical btn-group-sm w-100" role="group">
+                                <button type="button" class="btn btn-outline-secondary text-start" onclick="addExamplePrompts('urban')">
+                                    <i class="bi bi-building"></i> Urban Studies (architecture, streets, public space...)
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary text-start" onclick="addExamplePrompts('nature')">
+                                    <i class="bi bi-tree"></i> Natural Environment (landscape, vegetation, water...)
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary text-start" onclick="addExamplePrompts('social')">
+                                    <i class="bi bi-people"></i> Social Scenes (crowds, interactions, activities...)
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary text-start" onclick="addExamplePrompts('art')">
+                                    <i class="bi bi-palette"></i> Visual Culture (art, design, symbols, aesthetics...)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-gear"></i> Step 3: Analysis Settings</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">
+                            Analysis Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                               id="id_name"
+                               name="name"
+                               value="{{ form.name.value|default:'' }}"
+                               required
+                               maxlength="255"
+                               placeholder="e.g., Urban Landscape Analysis 2024">
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">
+                            Description (Optional)
+                        </label>
+                        <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                  id="id_description"
+                                  name="description"
+                                  rows="3"
+                                  placeholder="Describe the purpose and goals of this analysis...">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.description.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_model_name" class="form-label">
+                            CLIP Model <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select {% if form.model_name.errors %}is-invalid{% endif %}"
+                                id="id_model_name"
+                                name="model_name"
+                                required>
+                            <option value="openai/clip-vit-base-patch32" {% if form.model_name.value == 'openai/clip-vit-base-patch32' %}selected{% endif %}>
+                                CLIP ViT-B/32 (Default, Balanced) - Recommended
+                            </option>
+                            <option value="openai/clip-vit-base-patch16" {% if form.model_name.value == 'openai/clip-vit-base-patch16' %}selected{% endif %}>
+                                CLIP ViT-B/16 (Higher Quality, Slower)
+                            </option>
+                            <option value="openai/clip-vit-large-patch14" {% if form.model_name.value == 'openai/clip-vit-large-patch14' %}selected{% endif %}>
+                                CLIP ViT-L/14 (Highest Quality, Slowest)
+                            </option>
+                        </select>
+                        {% if form.model_name.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.model_name.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Larger models provide better accuracy but take longer to process
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'analysis:list' project.slug %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-play-circle"></i> Create & Start Analysis
+                        </button>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            The analysis will run in the background. You can track progress from the analyses list.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Prompt counter
+const textPromptsField = document.getElementById('id_text_prompts');
+const promptCountDisplay = document.getElementById('promptCount');
+
+function updatePromptCount() {
+    const text = textPromptsField.value;
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    promptCountDisplay.textContent = lines.length;
+
+    if (lines.length > 50) {
+        promptCountDisplay.parentElement.classList.remove('alert-info');
+        promptCountDisplay.parentElement.classList.add('alert-danger');
+    } else {
+        promptCountDisplay.parentElement.classList.remove('alert-danger');
+        promptCountDisplay.parentElement.classList.add('alert-info');
+    }
+}
+
+textPromptsField.addEventListener('input', updatePromptCount);
+updatePromptCount();
+
+// Example prompt templates
+const examplePrompts = {
+    urban: [
+        'modern architecture',
+        'historic buildings',
+        'urban streets',
+        'public spaces',
+        'commercial areas',
+        'residential neighborhoods',
+        'transportation infrastructure',
+        'street furniture',
+        'urban greenery',
+        'signage and advertising'
+    ],
+    nature: [
+        'natural landscape',
+        'forests and trees',
+        'water bodies',
+        'mountains and hills',
+        'sky and clouds',
+        'vegetation',
+        'wildlife',
+        'seasonal changes',
+        'natural patterns',
+        'geological formations'
+    ],
+    social: [
+        'crowds and gatherings',
+        'individual people',
+        'social interactions',
+        'daily activities',
+        'leisure and recreation',
+        'work and labor',
+        'cultural events',
+        'celebrations',
+        'protest and activism',
+        'community spaces'
+    ],
+    art: [
+        'visual art',
+        'sculpture',
+        'murals and graffiti',
+        'design elements',
+        'patterns and textures',
+        'colors and composition',
+        'cultural symbols',
+        'aesthetic qualities',
+        'artistic styles',
+        'visual culture'
+    ]
+};
+
+function addExamplePrompts(category) {
+    const current = textPromptsField.value.trim();
+    const examples = examplePrompts[category].join('\n');
+
+    if (current) {
+        textPromptsField.value = current + '\n' + examples;
+    } else {
+        textPromptsField.value = examples;
+    }
+
+    updatePromptCount();
+}
+
+// Form validation
+document.getElementById('analysisForm').addEventListener('submit', function(e) {
+    const promptCount = textPromptsField.value.split('\n').filter(line => line.trim().length > 0).length;
+
+    if (promptCount === 0) {
+        e.preventDefault();
+        alert('Please enter at least one text prompt.');
+        return false;
+    }
+
+    if (promptCount > 50) {
+        e.preventDefault();
+        alert('Maximum 50 text prompts allowed. You have ' + promptCount + ' prompts.');
+        return false;
+    }
+});
+</script>
+
+<style>
+.form-label {
+    font-weight: 600;
+}
+</style>
+{% endblock %}

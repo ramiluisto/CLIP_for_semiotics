@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ analysis.name }} - CLIP for Humanists{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Projects</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'analysis:list' project.slug %}">Analyses</a></li>
+                <li class="breadcrumb-item active">{{ analysis.name }}</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-graph-up text-primary"></i> {{ analysis.name }}
+        </h1>
+        {% if analysis.description %}
+            <p class="lead text-muted">{{ analysis.description }}</p>
+        {% endif %}
+    </div>
+    <div class="col-md-4 text-end">
+        {% if can_edit %}
+            <div class="btn-group">
+                {% if analysis.status in 'pending,processing' %}
+                    <form method="post" action="{% url 'analysis:cancel' project.slug analysis.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning" onclick="return confirm('Cancel this analysis?')">
+                            <i class="bi bi-stop-circle"></i> Cancel
+                        </button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'analysis:update' project.slug analysis.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'analysis:delete' project.slug analysis.id %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Status Card -->
+<div class="card mb-4 {% if analysis.status == 'completed' %}border-success{% elif analysis.status == 'failed' %}border-danger{% elif analysis.status == 'processing' %}border-warning{% endif %}">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                {% if analysis.status == 'completed' %}
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-2 text-success">Completed</h5>
+                {% elif analysis.status == 'processing' %}
+                    <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <h5 class="mt-2 text-warning">Processing</h5>
+                {% elif analysis.status == 'pending' %}
+                    <i class="bi bi-clock text-info" style="font-size: 3rem;"></i>
+                    <h5 class="mt-2 text-info">Pending</h5>
+                {% elif analysis.status == 'failed' %}
+                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
+                    <h5 class="mt-2 text-danger">Failed</h5>
+                {% else %}
+                    <i class="bi bi-question-circle text-secondary" style="font-size: 3rem;"></i>
+                    <h5 class="mt-2 text-secondary">{{ analysis.status|title }}</h5>
+                {% endif %}
+            </div>
+            <div class="col-md-10">
+                {% if analysis.status == 'processing' %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Processing Images</span>
+                            <span id="progress-percentage">{{ analysis.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                 role="progressbar"
+                                 id="progress-bar"
+                                 style="width: {{ analysis.progress_percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-0" id="progress-text">
+                        {{ analysis.images_processed }}/{{ analysis.total_images }} images processed
+                    </p>
+                {% elif analysis.status == 'completed' %}
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h3 class="text-success mb-0">{{ total_results }}</h3>
+                            <small class="text-muted">Total Results</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-primary mb-0">{{ text_prompts.count }}</h3>
+                            <small class="text-muted">Text Prompts</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-info mb-0">{{ analysis.total_images }}</h3>
+                            <small class="text-muted">Images Analyzed</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-warning mb-0">{{ analysis.processing_time_seconds|floatformat:1 }}s</h3>
+                            <small class="text-muted">Processing Time</small>
+                        </div>
+                    </div>
+                {% elif analysis.status == 'failed' %}
+                    <div class="alert alert-danger mb-0">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Analysis Failed</h5>
+                        <p class="mb-0">{{ analysis.error_message }}</p>
+                    </div>
+                {% elif analysis.status == 'pending' %}
+                    <p class="mb-0">
+                        <i class="bi bi-hourglass-split"></i>
+                        This analysis is queued and will start processing shortly.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent">
+        <div class="row text-muted small">
+            <div class="col-md-4">
+                <i class="bi bi-folder2"></i> <strong>Dataset:</strong> {{ analysis.dataset.name }}
+            </div>
+            <div class="col-md-4">
+                <i class="bi bi-cpu"></i> <strong>Model:</strong> {{ analysis.model_name }}
+            </div>
+            <div class="col-md-4">
+                <i class="bi bi-person"></i> <strong>Created by:</strong> {{ analysis.created_by.get_full_name|default:analysis.created_by.username }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+{% if analysis.status == 'completed' %}
+    <!-- Text Prompts Tabs -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0"><i class="bi bi-bar-chart"></i> Analysis Results</h4>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs mb-4" id="promptTabs" role="tablist">
+                {% for prompt in text_prompts %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if forloop.first %}active{% endif %}"
+                                id="prompt-{{ prompt.id }}-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#prompt-{{ prompt.id }}"
+                                type="button">
+                            {{ prompt.text }}
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="tab-content" id="promptTabsContent">
+                {% for prompt in text_prompts %}
+                    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+                         id="prompt-{{ prompt.id }}"
+                         role="tabpanel">
+                        <h5 class="mb-3">
+                            Top Results for "{{ prompt.text }}"
+                        </h5>
+
+                        {% with results=prompt_results|get_item:prompt.id %}
+                            {% if results %}
+                                <div class="row g-3">
+                                    {% for result in results %}
+                                        <div class="col-md-3">
+                                            <div class="card h-100">
+                                                <img src="{{ result.image.file.url }}"
+                                                     class="card-img-top"
+                                                     alt="{{ result.image.original_filename }}"
+                                                     style="height: 200px; object-fit: cover; cursor: pointer;"
+                                                     data-bs-toggle="modal"
+                                                     data-bs-target="#imageModal{{ result.image.id }}">
+                                                <div class="card-body p-2">
+                                                    <!-- Similarity Score -->
+                                                    <div class="mb-2">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <small class="text-muted">Similarity</small>
+                                                            <strong class="{% if result.get_score_percentage >= 70 %}text-success{% elif result.get_score_percentage >= 50 %}text-warning{% else %}text-secondary{% endif %}">
+                                                                {{ result.get_score_percentage|floatformat:1 }}%
+                                                            </strong>
+                                                        </div>
+                                                        <div class="progress" style="height: 8px;">
+                                                            <div class="progress-bar {% if result.get_score_percentage >= 70 %}bg-success{% elif result.get_score_percentage >= 50 %}bg-warning{% else %}bg-secondary{% endif %}"
+                                                                 style="width: {{ result.get_score_percentage }}%">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <small class="text-muted d-block text-truncate" title="{{ result.image.original_filename }}">
+                                                        {{ result.image.original_filename }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Image Modal -->
+                                        <div class="modal fade" id="imageModal{{ result.image.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">{{ result.image.original_filename }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-center">
+                                                        <img src="{{ result.image.file.url }}"
+                                                             class="img-fluid"
+                                                             alt="{{ result.image.original_filename }}">
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <div class="w-100">
+                                                            <div class="mb-2">
+                                                                <strong>Similarity Score for "{{ prompt.text }}":</strong>
+                                                                <span class="badge bg-primary float-end">{{ result.get_score_percentage|floatformat:1 }}%</span>
+                                                            </div>
+                                                            <div class="text-muted small">
+                                                                <strong>Dimensions:</strong> {{ result.image.width }}×{{ result.image.height }} •
+                                                                <strong>Size:</strong> {{ result.image.file_size|filesizeformat }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                {% if results.count > 10 %}
+                                    <div class="text-center mt-3">
+                                        <p class="text-muted">
+                                            Showing top 10 results. {{ results.count }} total matches.
+                                        </p>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> No results found for this prompt.
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Card -->
+    {% if avg_similarity %}
+        <div class="card mt-4 bg-light">
+            <div class="card-body">
+                <h5><i class="bi bi-calculator"></i> Analysis Statistics</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <strong>Average Similarity Score:</strong>
+                            <span class="badge bg-primary">{{ avg_similarity|floatformat:3 }}</span>
+                            ({{ avg_similarity|floatformat:1|add:"0"|mul:"50"|add:"50" }}%)
+                        </p>
+                        <p class="mb-2">
+                            <strong>Total Comparisons:</strong> {{ total_results }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <strong>Images per Second:</strong>
+                            {{ analysis.total_images|div:analysis.processing_time_seconds|floatformat:2 }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Started:</strong> {{ analysis.started_at|date:"Y-m-d H:i" }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Completed:</strong> {{ analysis.completed_at|date:"Y-m-d H:i" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+{% elif analysis.status == 'pending' %}
+    <!-- Pending State -->
+    <div class="card bg-light">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-hourglass text-info" style="font-size: 4rem;"></i>
+            <h3 class="mt-3">Analysis Queued</h3>
+            <p class="text-muted">
+                This analysis is waiting to start. Processing will begin automatically.
+            </p>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Text Prompts Info -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-tags"></i> Text Prompts ({{ text_prompts.count }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for prompt in text_prompts %}
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <span class="badge bg-secondary">{{ prompt.text }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Auto-refresh for processing -->
+{% if analysis.status == 'processing' %}
+<script>
+setInterval(function() {
+    fetch('{% url "analysis:progress" project.slug analysis.id %}')
+        .then(response => response.json())
+        .then(data => {
+            // Update progress bar
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercentage = document.getElementById('progress-percentage');
+            const progressText = document.getElementById('progress-text');
+
+            if (progressBar) {
+                progressBar.style.width = data.progress_percentage + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = data.progress_percentage + '%';
+            }
+            if (progressText) {
+                progressText.textContent = data.images_processed + '/' + data.total_images + ' images processed';
+            }
+
+            // Reload page if status changed
+            if (data.status !== 'processing') {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error fetching progress:', error));
+}, 2000); // Update every 2 seconds
+</script>
+{% endif %}
+
+<!-- Custom filter for template -->
+{% load custom_filters %}
+
+<style>
+.nav-tabs .nav-link {
+    color: #6c757d;
+}
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+}
+</style>
+{% endblock %}
