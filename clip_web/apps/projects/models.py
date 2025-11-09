@@ -38,6 +38,7 @@ class Project(models.Model):
     collaborators = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through='ProjectMembership',
+        through_fields=('project', 'user'),
         related_name='collaborated_projects',
         blank=True
     )
