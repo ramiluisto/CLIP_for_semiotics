@@ -54,8 +54,9 @@ htmlcov/
 celerybeat-schedule
 celerybeat.pid
 
-# Logs
-logs/
+# Logs - keep directory structure but ignore log files
+logs/*.log
+!logs/.gitkeep
 *.log
 
 # Backup files
